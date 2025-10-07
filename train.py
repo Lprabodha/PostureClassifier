@@ -190,14 +190,11 @@ class PostureTrainer:
         print("PHASE 1: Training with frozen backbone")
         print("="*60)
         
-        # Cosine decay learning rate
+        # Use fixed learning rate with ReduceLROnPlateau
         initial_lr = 1e-3
-        lr_schedule = keras.optimizers.schedules.CosineDecay(
-            initial_lr, decay_steps=len(self.train_ds) * 20
-        )
         
         self.model.compile(
-            optimizer=keras.optimizers.Adam(learning_rate=lr_schedule),
+            optimizer=keras.optimizers.Adam(learning_rate=initial_lr),
             loss="sparse_categorical_crossentropy",
             metrics=["accuracy"]
         )
@@ -216,10 +213,11 @@ class PostureTrainer:
                 mode='max'
             ),
             keras.callbacks.ReduceLROnPlateau(
-                factor=0.3, 
+                factor=0.5, 
                 patience=5, 
                 min_lr=1e-7,
-                monitor='val_loss'
+                monitor='val_loss',
+                verbose=1
             )
         ]
         
@@ -271,7 +269,8 @@ class PostureTrainer:
                 factor=0.5, 
                 patience=6, 
                 min_lr=1e-8,
-                monitor='val_loss'
+                monitor='val_loss',
+                verbose=1
             )
         ]
         
