@@ -1,3 +1,0 @@
-Arm_Raise
-Knee_Extension
-Squats
