@@ -1,0 +1,408 @@
+"""
+IMPROVED Posture Classification Training
+With advanced techniques for higher accuracy
+"""
+
+import os
+import tensorflow as tf
+from tensorflow import keras
+from tensorflow.keras import layers, models
+import numpy as np
+import argparse
+from datetime import datetime
+
+
+class ImprovedPostureTrainer:
+    def __init__(self, config):
+        self.data_dir = config['data_dir']
+        self.img_size = config['img_size']
+        self.batch_size = config['batch_size']
+        self.epochs = config['epochs']
+        self.seed = config['seed']
+        self.model_save_dir = config['model_save_dir']
+        
+        os.makedirs(self.model_save_dir, exist_ok=True)
+        
+        # IMPROVED: More aggressive data augmentation
+        self.data_augmentation = keras.Sequential([
+            layers.RandomFlip("horizontal"),
+            layers.RandomRotation(0.3),  # Increased from 0.2
+            layers.RandomZoom(0.3),      # Increased from 0.2
+            layers.RandomContrast(0.3),  # Increased from 0.2
+            layers.RandomBrightness(0.2), # NEW: brightness variation
+            layers.RandomTranslation(0.15, 0.15), # NEW: position variation
+        ], name="augmentation")
+        
+    def load_datasets(self):
+        """Load datasets with proper image loading"""
+        print("Loading datasets...")
+        
+        train_dir = os.path.join(self.data_dir, "Train")
+        test_dir = os.path.join(self.data_dir, "Test")
+        
+        if not os.path.exists(train_dir):
+            raise FileNotFoundError(f"Training directory not found: {train_dir}")
+        if not os.path.exists(test_dir):
+            raise FileNotFoundError(f"Test directory not found: {test_dir}")
+        
+        # Load with color mode explicitly set to RGB
+        self.train_ds = keras.utils.image_dataset_from_directory(
+            train_dir,
+            image_size=self.img_size,
+            batch_size=self.batch_size,
+            validation_split=0.2,
+            subset="training",
+            seed=self.seed,
+            color_mode='rgb',  # Explicit RGB
+            interpolation='bilinear'
+        )
+        
+        self.val_ds = keras.utils.image_dataset_from_directory(
+            train_dir,
+            image_size=self.img_size,
+            batch_size=self.batch_size,
+            validation_split=0.2,
+            subset="validation",
+            seed=self.seed,
+            color_mode='rgb',
+            interpolation='bilinear'
+        )
+        
+        self.test_ds = keras.utils.image_dataset_from_directory(
+            test_dir,
+            image_size=self.img_size,
+            batch_size=self.batch_size,
+            shuffle=False,
+            color_mode='rgb',
+            interpolation='bilinear'
+        )
+        
+        self.class_names = self.train_ds.class_names
+        print(f"Classes found: {self.class_names}")
+        
+        # Print dataset statistics
+        print(f"\nDataset Statistics:")
+        print(f"  Training batches: {len(self.train_ds)}")
+        print(f"  Validation batches: {len(self.val_ds)}")
+        print(f"  Test batches: {len(self.test_ds)}")
+        
+    def compute_class_weights(self):
+        """Compute class weights for imbalanced data"""
+        print("\nComputing class weights...")
+        y_train = np.concatenate([y for x, y in self.train_ds], axis=0)
+        counts = np.bincount(y_train)
+        total = np.sum(counts)
+        
+        # Print class distribution
+        print("\nClass Distribution:")
+        for i, (name, count) in enumerate(zip(self.class_names, counts)):
+            percentage = (count / total) * 100
+            print(f"  {name}: {count} images ({percentage:.1f}%)")
+        
+        self.class_weights = {i: total/(len(self.class_names)*c) for i, c in enumerate(counts)}
+        print(f"\nClass weights: {self.class_weights}")
+        
+    def preprocess_datasets(self):
+        """Enhanced preprocessing pipeline"""
+        print("\nPreprocessing datasets...")
+        preprocess_input = keras.applications.efficientnet.preprocess_input
+        
+        def prep(ds, augment=False, shuffle=False, cache=False):
+            if cache:
+                ds = ds.cache()  # Cache for faster epoch iteration
+            if shuffle:
+                ds = ds.shuffle(1000, seed=self.seed)
+            if augment:
+                ds = ds.map(lambda x, y: (self.data_augmentation(x, training=True), y),
+                           num_parallel_calls=tf.data.AUTOTUNE)
+            ds = ds.map(lambda x, y: (preprocess_input(x), y), 
+                       num_parallel_calls=tf.data.AUTOTUNE)
+            return ds.prefetch(tf.data.AUTOTUNE)
+        
+        self.train_ds = prep(self.train_ds, augment=True, shuffle=True, cache=False)
+        self.val_ds = prep(self.val_ds, cache=True)
+        self.test_ds = prep(self.test_ds, cache=True)
+        
+    def build_improved_model(self):
+        """Build IMPROVED model with better architecture"""
+        print("\nBuilding IMPROVED model...")
+        
+        # Use EfficientNetB0 backbone
+        base_model = keras.applications.EfficientNetB0(
+            weights=None,
+            include_top=False,
+            input_shape=(self.img_size[0], self.img_size[1], 3)
+        )
+        
+        # Load weights with skip_mismatch
+        try:
+            base_model.load_weights(
+                keras.utils.get_file(
+                    'efficientnetb0_notop.h5',
+                    'https://storage.googleapis.com/keras-applications/efficientnetb0_notop.h5',
+                    cache_subdir='models'
+                ),
+                skip_mismatch=True
+            )
+            print("✅ Pretrained weights loaded successfully")
+        except Exception as e:
+            print(f"Warning: Could not load pretrained weights: {e}")
+        
+        base_model.trainable = False
+        
+        # IMPROVED: Better head architecture
+        inputs = keras.Input(shape=(self.img_size[0], self.img_size[1], 3))
+        
+        # Apply augmentation in the model (for consistent behavior)
+        x = self.data_augmentation(inputs)
+        x = keras.applications.efficientnet.preprocess_input(x)
+        
+        # Feature extraction
+        x = base_model(x, training=False)
+        x = layers.GlobalAveragePooling2D()(x)
+        
+        # IMPROVED: Deeper classification head with more regularization
+        x = layers.BatchNormalization()(x)
+        x = layers.Dropout(0.5)(x)
+        x = layers.Dense(512, activation="relu", 
+                        kernel_regularizer=keras.regularizers.l2(1e-4))(x)
+        x = layers.BatchNormalization()(x)
+        x = layers.Dropout(0.4)(x)
+        x = layers.Dense(256, activation="relu",
+                        kernel_regularizer=keras.regularizers.l2(1e-4))(x)
+        x = layers.BatchNormalization()(x)
+        x = layers.Dropout(0.3)(x)
+        
+        # Output layer
+        outputs = layers.Dense(len(self.class_names), activation="softmax")(x)
+        
+        self.model = keras.Model(inputs, outputs)
+        self.base_model = base_model
+        
+        print("Model built successfully")
+        print(f"   Input shape: {self.model.input_shape}")
+        print(f"   Output shape: {self.model.output_shape}")
+        print(f"   Total parameters: {self.model.count_params():,}")
+        
+    def train_phase1(self):
+        """Phase 1: Train with frozen backbone"""
+        print("\n" + "="*60)
+        print("PHASE 1: Training with frozen backbone")
+        print("="*60)
+        
+        # IMPROVED: Cosine decay learning rate
+        initial_lr = 1e-3
+        lr_schedule = keras.optimizers.schedules.CosineDecay(
+            initial_lr, decay_steps=len(self.train_ds) * 20
+        )
+        
+        self.model.compile(
+            optimizer=keras.optimizers.Adam(learning_rate=lr_schedule),
+            loss="sparse_categorical_crossentropy",
+            metrics=["accuracy", keras.metrics.TopKCategoricalAccuracy(k=2, name='top2_accuracy')]
+        )
+        
+        checkpoint_path = os.path.join(self.model_save_dir, "best_model_phase1.keras")
+        callbacks = [
+            keras.callbacks.EarlyStopping(
+                patience=12, 
+                restore_best_weights=True,
+                monitor='val_accuracy'
+            ),
+            keras.callbacks.ModelCheckpoint(
+                checkpoint_path, 
+                save_best_only=True,
+                monitor='val_accuracy',
+                mode='max'
+            ),
+            keras.callbacks.ReduceLROnPlateau(
+                factor=0.3, 
+                patience=5, 
+                min_lr=1e-7,
+                monitor='val_loss'
+            )
+        ]
+        
+        history = self.model.fit(
+            self.train_ds,
+            validation_data=self.val_ds,
+            epochs=20,  # Increased from 15
+            class_weight=self.class_weights,
+            callbacks=callbacks,
+            verbose=1
+        )
+        
+        return history
+        
+    def train_phase2(self):
+        """Phase 2: Fine-tune with unfrozen layers"""
+        print("\n" + "="*60)
+        print("PHASE 2: Fine-tuning backbone layers")
+        print("="*60)
+        
+        # Unfreeze more layers for better adaptation
+        self.base_model.trainable = True
+        for layer in self.base_model.layers[:-50]:  # Unfreeze last 50 layers
+            layer.trainable = False
+        
+        print(f"Trainable layers: {sum([1 for layer in self.model.layers if layer.trainable])}")
+        
+        # Lower learning rate for fine-tuning
+        self.model.compile(
+            optimizer=keras.optimizers.Adam(learning_rate=5e-6),  # Very low LR
+            loss="sparse_categorical_crossentropy",
+            metrics=["accuracy", keras.metrics.TopKCategoricalAccuracy(k=2, name='top2_accuracy')]
+        )
+        
+        checkpoint_path = os.path.join(self.model_save_dir, "best_model_phase2.keras")
+        callbacks = [
+            keras.callbacks.EarlyStopping(
+                patience=15, 
+                restore_best_weights=True,
+                monitor='val_accuracy'
+            ),
+            keras.callbacks.ModelCheckpoint(
+                checkpoint_path, 
+                save_best_only=True,
+                monitor='val_accuracy',
+                mode='max'
+            ),
+            keras.callbacks.ReduceLROnPlateau(
+                factor=0.5, 
+                patience=6, 
+                min_lr=1e-8,
+                monitor='val_loss'
+            )
+        ]
+        
+        history = self.model.fit(
+            self.train_ds,
+            validation_data=self.val_ds,
+            epochs=self.epochs,
+            class_weight=self.class_weights,
+            callbacks=callbacks,
+            verbose=1
+        )
+        
+        return history
+        
+    def evaluate(self):
+        """Detailed evaluation on test set"""
+        print("\n" + "="*60)
+        print("FINAL EVALUATION")
+        print("="*60)
+        
+        # Overall metrics
+        results = self.model.evaluate(self.test_ds, verbose=1)
+        print(f"\nTest Loss: {results[0]:.4f}")
+        print(f"Test Accuracy: {results[1]:.4f}")
+        print(f"Top-2 Accuracy: {results[2]:.4f}")
+        
+        # Per-class accuracy
+        print("\nPer-Class Performance:")
+        y_true = []
+        y_pred = []
+        
+        for images, labels in self.test_ds:
+            predictions = self.model.predict(images, verbose=0)
+            y_true.extend(labels.numpy())
+            y_pred.extend(np.argmax(predictions, axis=1))
+        
+        from sklearn.metrics import classification_report, confusion_matrix
+        
+        print("\nClassification Report:")
+        print(classification_report(y_true, y_pred, target_names=self.class_names))
+        
+        print("\nConfusion Matrix:")
+        cm = confusion_matrix(y_true, y_pred)
+        print(cm)
+        
+        # Per-class accuracy
+        for i, class_name in enumerate(self.class_names):
+            class_acc = cm[i, i] / cm[i].sum() if cm[i].sum() > 0 else 0
+            print(f"  {class_name}: {class_acc*100:.2f}%")
+        
+        return results
+        
+    def save_model(self):
+        """Save final model with metadata"""
+        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+        save_path = os.path.join(self.model_save_dir, f"posture_model_improved_{timestamp}.keras")
+        self.model.save(save_path)
+        print(f"\nFinal model saved at: {save_path}")
+        
+        # Save class names
+        class_names_path = os.path.join(self.model_save_dir, "class_names.txt")
+        with open(class_names_path, 'w') as f:
+            f.write('\n'.join(self.class_names))
+        print(f"Class names saved at: {class_names_path}")
+        
+        # Save model info
+        info_path = os.path.join(self.model_save_dir, f"model_info_{timestamp}.txt")
+        with open(info_path, 'w') as f:
+            f.write(f"Model: EfficientNetB0 + Improved Head\n")
+            f.write(f"Classes: {', '.join(self.class_names)}\n")
+            f.write(f"Image Size: {self.img_size}\n")
+            f.write(f"Total Parameters: {self.model.count_params():,}\n")
+            f.write(f"Timestamp: {timestamp}\n")
+        
+        return save_path
+
+
+def main():
+    parser = argparse.ArgumentParser(description='Train IMPROVED posture classification model')
+    parser.add_argument('--data_dir', type=str, default='./Datasets')
+    parser.add_argument('--model_save_dir', type=str, default='./models')
+    parser.add_argument('--img_size', type=int, default=224)
+    parser.add_argument('--batch_size', type=int, default=32)
+    parser.add_argument('--epochs', type=int, default=50)  # Increased default
+    parser.add_argument('--seed', type=int, default=123)
+    
+    args = parser.parse_args()
+    
+    config = {
+        'data_dir': args.data_dir,
+        'model_save_dir': args.model_save_dir,
+        'img_size': (args.img_size, args.img_size),
+        'batch_size': args.batch_size,
+        'epochs': args.epochs,
+        'seed': args.seed
+    }
+    
+    print("="*60)
+    print("IMPROVED POSTURE CLASSIFICATION TRAINING")
+    print("="*60)
+    print(f"TensorFlow version: {tf.__version__}")
+    print(f"Configuration: {config}\n")
+    
+    # Initialize trainer
+    trainer = ImprovedPostureTrainer(config)
+    
+    # Training pipeline
+    trainer.load_datasets()
+    trainer.compute_class_weights()
+    trainer.preprocess_datasets()
+    trainer.build_improved_model()
+    
+    # Two-phase training
+    history1 = trainer.train_phase1()
+    history2 = trainer.train_phase2()
+    
+    # Evaluation
+    trainer.evaluate()
+    
+    # Save
+    model_path = trainer.save_model()
+    
+    print("\n" + "="*60)
+    print("TRAINING COMPLETE")
+    print("="*60)
+    print(f"Model saved at: {model_path}")
+    print("\nTo use the model:")
+    print("  python app.py")
+    print("  Then visit: http://localhost:5000")
+
+
+if __name__ == "__main__":
+    main()
+
