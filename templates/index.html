@@ -297,7 +297,7 @@
             <div class="upload-icon">📤</div>
             <div class="upload-text">Click to upload or drag and drop</div>
             <div class="upload-hint">Support: Images (JPG, PNG) or Videos (MP4, AVI, MOV)</div>
-            <div class="upload-hint">Maximum file size: 100MB</div>
+            <div class="upload-hint">Maximum file size: 200MB</div>
         </div>
 
         <input type="file" id="fileInput" accept="image/png,image/jpeg,video/mp4,video/avi,video/quicktime">
@@ -313,7 +313,13 @@
 
         <div class="loading" id="loading">
             <div class="spinner"></div>
-            <div>Analyzing... This may take a moment.</div>
+            <div id="loadingText">Analyzing... This may take a moment.</div>
+            <div id="progressBar" style="display:none; margin-top:15px;">
+                <div style="background:#e9ecef; border-radius:10px; height:20px; overflow:hidden;">
+                    <div id="progressFill" style="background:linear-gradient(135deg, #667eea 0%, #764ba2 100%); height:100%; width:0%; transition:width 0.3s;"></div>
+                </div>
+                <div id="progressText" style="margin-top:5px; color:#666; font-size:0.9em;"></div>
+            </div>
         </div>
 
         <div class="error" id="error"></div>
@@ -452,6 +458,22 @@
                     <span class="result-label">Detections:</span>
                     <span class="result-value">${data.data.detections}</span>
                 </div>`;
+                if (data.data.correct_count !== undefined) {
+                    html += `<div class="result-item">
+                        <span class="result-label">Correct Form:</span>
+                        <span class="result-value correct">${data.data.correct_count}</span>
+                    </div>`;
+                    html += `<div class="result-item">
+                        <span class="result-label">Needs Improvement:</span>
+                        <span class="result-value incorrect">${data.data.incorrect_count}</span>
+                    </div>`;
+                }
+                if (data.data.avg_confidence !== undefined) {
+                    html += `<div class="result-item">
+                        <span class="result-label">Average Confidence:</span>
+                        <span class="result-value">${(data.data.avg_confidence * 100).toFixed(1)}%</span>
+                    </div>`;
+                }
                 html += '<div class="result-item"><span class="result-label">Posture Counts:</span></div>';
                 for (const [posture, count] of Object.entries(data.data.posture_counts)) {
                     html += `<div class="result-item" style="padding-left: 20px;">

@@ -28,7 +28,7 @@ os.makedirs('static', exist_ok=True)
 
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 app.config['RESULTS_FOLDER'] = RESULTS_FOLDER
-app.config['MAX_CONTENT_LENGTH'] = 100 * 1024 * 1024  # 100MB max file size
+app.config['MAX_CONTENT_LENGTH'] = 200 * 1024 * 1024  # 200MB max file size
 
 # Global variables for model and MediaPipe
 model = None
@@ -37,6 +37,7 @@ mp_pose = mp.solutions.pose
 mp_drawing = mp.solutions.drawing_utils
 mp_drawing_styles = mp.solutions.drawing_styles
 pose = None
+CONFIDENCE_THRESHOLD = 0.70  # Increased threshold for better accuracy
 
 
 def allowed_file(filename):
@@ -80,9 +81,11 @@ def load_model_and_classes():
     
     print(f"Classes: {class_names}")
     
-    # Initialize MediaPipe Pose
+    # Initialize MediaPipe Pose with better settings
     pose = mp_pose.Pose(
         static_image_mode=False,
+        model_complexity=1,  # 0, 1, or 2 (higher = more accurate but slower)
+        smooth_landmarks=True,
         min_detection_confidence=0.5,
         min_tracking_confidence=0.5
     )
@@ -111,8 +114,8 @@ def get_angle(a, b, c):
 
 
 def detect_posture_rule_based(landmarks):
-    """Detect posture using rule-based approach"""
-    # Arm Raise
+    """Enhanced rule-based posture detection with better accuracy"""
+    # Get all relevant angles
     left_arm = get_angle(
         landmarks[mp_pose.PoseLandmark.LEFT_SHOULDER.value],
         landmarks[mp_pose.PoseLandmark.LEFT_ELBOW.value],
@@ -123,10 +126,7 @@ def detect_posture_rule_based(landmarks):
         landmarks[mp_pose.PoseLandmark.RIGHT_ELBOW.value],
         landmarks[mp_pose.PoseLandmark.RIGHT_WRIST.value]
     )
-    if left_arm > 140 and right_arm > 140:
-        return "Arm_Raise"
     
-    # Squats or Knee_Extension
     left_knee = get_angle(
         landmarks[mp_pose.PoseLandmark.LEFT_HIP.value],
         landmarks[mp_pose.PoseLandmark.LEFT_KNEE.value],
@@ -138,16 +138,38 @@ def detect_posture_rule_based(landmarks):
         landmarks[mp_pose.PoseLandmark.RIGHT_ANKLE.value]
     )
     
+    # Get vertical positions
+    left_shoulder_y = landmarks[mp_pose.PoseLandmark.LEFT_SHOULDER.value].y
+    right_shoulder_y = landmarks[mp_pose.PoseLandmark.RIGHT_SHOULDER.value].y
+    left_elbow_y = landmarks[mp_pose.PoseLandmark.LEFT_ELBOW.value].y
+    right_elbow_y = landmarks[mp_pose.PoseLandmark.RIGHT_ELBOW.value].y
+    
+    # Arm Raise: arms extended AND elbows above shoulders
+    if (left_arm > 140 and right_arm > 140 and 
+        left_elbow_y < left_shoulder_y and right_elbow_y < right_shoulder_y):
+        return "Arm_Raise"
+    
+    # Knee Extension: one or both knees nearly straight while standing
+    if left_knee > 160 or right_knee > 160:
+        left_hip_y = landmarks[mp_pose.PoseLandmark.LEFT_HIP.value].y
+        left_knee_y = landmarks[mp_pose.PoseLandmark.LEFT_KNEE.value].y
+        if left_hip_y < left_knee_y:  # Hip above knee (standing position)
+            return "Knee_Extension"
+    
+    # Squats: both knees bent in squat range
     if 60 < left_knee < 130 and 60 < right_knee < 130:
-        return "Squats"
-    elif left_knee > 160 or right_knee > 160:
-        return "Knee_Extension"
+        hip_y = (landmarks[mp_pose.PoseLandmark.LEFT_HIP.value].y +
+                 landmarks[mp_pose.PoseLandmark.RIGHT_HIP.value].y) / 2
+        shoulder_y = (landmarks[mp_pose.PoseLandmark.LEFT_SHOULDER.value].y +
+                      landmarks[mp_pose.PoseLandmark.RIGHT_SHOULDER.value].y) / 2
+        if hip_y > shoulder_y - 0.1:  # Hip lowered significantly
+            return "Squats"
     
     return None
 
 
 def check_posture_correctness(posture, landmarks):
-    """Check if posture is performed correctly"""
+    """Enhanced correctness checking with detailed validation"""
     if posture == "Arm_Raise":
         left_arm = get_angle(
             landmarks[mp_pose.PoseLandmark.LEFT_SHOULDER.value],
@@ -159,7 +181,16 @@ def check_posture_correctness(posture, landmarks):
             landmarks[mp_pose.PoseLandmark.RIGHT_ELBOW.value],
             landmarks[mp_pose.PoseLandmark.RIGHT_WRIST.value]
         )
-        return left_arm > 140 and right_arm > 140
+        
+        left_elbow_y = landmarks[mp_pose.PoseLandmark.LEFT_ELBOW.value].y
+        right_elbow_y = landmarks[mp_pose.PoseLandmark.RIGHT_ELBOW.value].y
+        left_shoulder_y = landmarks[mp_pose.PoseLandmark.LEFT_SHOULDER.value].y
+        right_shoulder_y = landmarks[mp_pose.PoseLandmark.RIGHT_SHOULDER.value].y
+        
+        arms_extended = left_arm > 140 and right_arm > 140
+        arms_raised = left_elbow_y < left_shoulder_y and right_elbow_y < right_shoulder_y
+        
+        return arms_extended and arms_raised
         
     elif posture == "Squats":
         left_knee = get_angle(
@@ -172,7 +203,16 @@ def check_posture_correctness(posture, landmarks):
             landmarks[mp_pose.PoseLandmark.RIGHT_KNEE.value],
             landmarks[mp_pose.PoseLandmark.RIGHT_ANKLE.value]
         )
-        return 60 < left_knee < 130 and 60 < right_knee < 130
+        
+        hip_y = (landmarks[mp_pose.PoseLandmark.LEFT_HIP.value].y +
+                 landmarks[mp_pose.PoseLandmark.RIGHT_HIP.value].y) / 2
+        shoulder_y = (landmarks[mp_pose.PoseLandmark.LEFT_SHOULDER.value].y +
+                      landmarks[mp_pose.PoseLandmark.RIGHT_SHOULDER.value].y) / 2
+        
+        knees_bent = 60 < left_knee < 130 and 60 < right_knee < 130
+        hip_lowered = hip_y > shoulder_y - 0.1
+        
+        return knees_bent and hip_lowered
         
     elif posture == "Knee_Extension":
         left_knee = get_angle(
@@ -185,6 +225,7 @@ def check_posture_correctness(posture, landmarks):
             landmarks[mp_pose.PoseLandmark.RIGHT_KNEE.value],
             landmarks[mp_pose.PoseLandmark.RIGHT_ANKLE.value]
         )
+        
         return left_knee > 160 or right_knee > 160
     
     return False
@@ -210,9 +251,12 @@ def process_image(image_path):
         # Rule-based detection
         rb_posture = detect_posture_rule_based(results.pose_landmarks.landmark)
         
-        # Hybrid decision
-        posture = predicted_class if confidence > 0.65 else rb_posture
-        if posture is None:
+        # Hybrid decision with improved threshold
+        if confidence > CONFIDENCE_THRESHOLD:
+            posture = predicted_class
+        elif rb_posture is not None:
+            posture = rb_posture
+        else:
             posture = predicted_class
         
         # Check correctness
@@ -226,12 +270,18 @@ def process_image(image_path):
             landmark_drawing_spec=mp_drawing_styles.get_default_pose_landmarks_style()
         )
         
-        # Add text
-        status = "✅ Correct" if correct else "❌ Incorrect"
+        # Add text with better formatting
+        status = "Correct" if correct else "Incorrect"
         color = (0, 255, 0) if correct else (0, 0, 255)
-        text = f"{posture} {status} ({confidence:.2f})"
-        cv2.putText(frame, text, (10, 30), cv2.FONT_HERSHEY_SIMPLEX, 
-                   1, color, 2)
+        
+        # Main label
+        text1 = f"{posture}"
+        text2 = f"{status} ({confidence*100:.1f}%)"
+        
+        cv2.putText(frame, text1, (10, 40), cv2.FONT_HERSHEY_SIMPLEX, 
+                   1.2, color, 3)
+        cv2.putText(frame, text2, (10, 80), cv2.FONT_HERSHEY_SIMPLEX, 
+                   0.8, color, 2)
         
         # Save result
         result_filename = f"result_{uuid.uuid4().hex[:8]}.jpg"
@@ -242,7 +292,7 @@ def process_image(image_path):
             'posture': posture,
             'confidence': confidence,
             'correct': correct,
-            'method': 'CNN' if confidence > 0.65 else 'Rule-based'
+            'method': 'CNN' if confidence > CONFIDENCE_THRESHOLD else 'Rule-based'
         }
     else:
         return None, "Error: No human detected in image"
@@ -268,6 +318,7 @@ def process_video(video_path):
     
     frame_count = 0
     detections = []
+    last_prediction = None
     
     while True:
         ret, frame = cap.read()
@@ -276,8 +327,8 @@ def process_video(video_path):
         
         frame_count += 1
         
-        # Process every 5th frame for efficiency
-        if frame_count % 5 == 0:
+        # Process every 3rd frame for better accuracy/speed balance
+        if frame_count % 3 == 0:
             # CNN prediction
             cnn_input = preprocess_frame(frame)
             prediction = model.predict(cnn_input, verbose=0)
@@ -289,11 +340,16 @@ def process_video(video_path):
             
             if results.pose_landmarks:
                 rb_posture = detect_posture_rule_based(results.pose_landmarks.landmark)
-                posture = predicted_class if confidence > 0.65 else rb_posture
-                if posture is None:
+                
+                if confidence > CONFIDENCE_THRESHOLD:
                     posture = predicted_class
+                elif rb_posture is not None:
+                    posture = rb_posture
+                else:
+                    posture = predicted_class if last_prediction is None else last_prediction
                 
                 correct = check_posture_correctness(posture, results.pose_landmarks.landmark)
+                last_prediction = posture
                 
                 # Draw landmarks
                 mp_drawing.draw_landmarks(
@@ -303,11 +359,11 @@ def process_video(video_path):
                     landmark_drawing_spec=mp_drawing_styles.get_default_pose_landmarks_style()
                 )
                 
-                # Add text
-                status = "✅" if correct else "❌"
+                # Add text with better formatting
+                status = "OK" if correct else "FIX"
                 color = (0, 255, 0) if correct else (0, 0, 255)
-                text = f"{posture} {status} ({confidence:.2f})"
-                cv2.putText(frame, text, (10, 30), cv2.FONT_HERSHEY_SIMPLEX, 
+                text = f"{posture} {status} ({confidence*100:.0f}%)"
+                cv2.putText(frame, text, (10, 40), cv2.FONT_HERSHEY_SIMPLEX, 
                            1, color, 2)
                 
                 detections.append({
@@ -322,11 +378,14 @@ def process_video(video_path):
     cap.release()
     out.release()
     
-    # Summary statistics
+    # Calculate detailed statistics
     summary = {
         'total_frames': frame_count,
         'detections': len(detections),
-        'posture_counts': {}
+        'posture_counts': {},
+        'correct_count': sum(1 for d in detections if d['correct']),
+        'incorrect_count': sum(1 for d in detections if not d['correct']),
+        'avg_confidence': float(np.mean([d['confidence'] for d in detections])) if detections else 0.0
     }
     
     for det in detections:
@@ -404,7 +463,9 @@ def health():
     return jsonify({
         'status': 'healthy',
         'model_loaded': model is not None,
-        'classes': class_names
+        'classes': class_names,
+        'version': '2.0-enhanced',
+        'confidence_threshold': CONFIDENCE_THRESHOLD
     })
 
 
@@ -428,5 +489,5 @@ if __name__ == '__main__':
     print("Press Ctrl+C to stop")
     print("=" * 60 + "\n")
     
-    app.run(host='0.0.0.0', port=5000, debug=True)
+    app.run(host='0.0.0.0', port=5000, debug=False, threaded=True)
 

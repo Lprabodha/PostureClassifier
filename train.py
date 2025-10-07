@@ -1,12 +1,12 @@
 """
-Posture Classification Training Script (Local Version)
-Supports: Arm Raise, Squats classification using EfficientNetB0
+Posture Classification Training Script
+Enhanced with advanced techniques for higher accuracy
 """
 
 import os
 import tensorflow as tf
 from tensorflow import keras
-from tensorflow.keras import layers
+from tensorflow.keras import layers, models
 import numpy as np
 import argparse
 from datetime import datetime
@@ -21,38 +21,40 @@ class PostureTrainer:
         self.seed = config['seed']
         self.model_save_dir = config['model_save_dir']
         
-        # Create save directory if it doesn't exist
         os.makedirs(self.model_save_dir, exist_ok=True)
         
-        # Data augmentation
+        # Enhanced data augmentation
         self.data_augmentation = keras.Sequential([
             layers.RandomFlip("horizontal"),
-            layers.RandomRotation(0.2),
-            layers.RandomZoom(0.2),
-            layers.RandomContrast(0.2),
+            layers.RandomRotation(0.3),
+            layers.RandomZoom(0.3),
+            layers.RandomContrast(0.3),
+            layers.RandomBrightness(0.2),
+            layers.RandomTranslation(0.15, 0.15),
         ], name="augmentation")
         
     def load_datasets(self):
-        """Load training, validation, and test datasets"""
+        """Load datasets with proper image loading"""
         print("Loading datasets...")
         
         train_dir = os.path.join(self.data_dir, "Train")
         test_dir = os.path.join(self.data_dir, "Test")
         
-        # Check if directories exist
         if not os.path.exists(train_dir):
             raise FileNotFoundError(f"Training directory not found: {train_dir}")
         if not os.path.exists(test_dir):
             raise FileNotFoundError(f"Test directory not found: {test_dir}")
         
-        # Load training dataset with validation split
+        # Load with color mode explicitly set to RGB
         self.train_ds = keras.utils.image_dataset_from_directory(
             train_dir,
             image_size=self.img_size,
             batch_size=self.batch_size,
             validation_split=0.2,
             subset="training",
-            seed=self.seed
+            seed=self.seed,
+            color_mode='rgb',
+            interpolation='bilinear'
         )
         
         self.val_ds = keras.utils.image_dataset_from_directory(
@@ -61,194 +63,300 @@ class PostureTrainer:
             batch_size=self.batch_size,
             validation_split=0.2,
             subset="validation",
-            seed=self.seed
+            seed=self.seed,
+            color_mode='rgb',
+            interpolation='bilinear'
         )
         
         self.test_ds = keras.utils.image_dataset_from_directory(
             test_dir,
             image_size=self.img_size,
             batch_size=self.batch_size,
-            shuffle=False
+            shuffle=False,
+            color_mode='rgb',
+            interpolation='bilinear'
         )
         
         self.class_names = self.train_ds.class_names
         print(f"Classes found: {self.class_names}")
         
+        # Print dataset statistics
+        print(f"\nDataset Statistics:")
+        print(f"  Training batches: {len(self.train_ds)}")
+        print(f"  Validation batches: {len(self.val_ds)}")
+        print(f"  Test batches: {len(self.test_ds)}")
+        
     def compute_class_weights(self):
-        """Compute class weights to handle imbalanced datasets"""
-        print("Computing class weights...")
+        """Compute class weights for imbalanced data"""
+        print("\nComputing class weights...")
         y_train = np.concatenate([y for x, y in self.train_ds], axis=0)
         counts = np.bincount(y_train)
         total = np.sum(counts)
+        
+        # Print class distribution
+        print("\nClass Distribution:")
+        for i, (name, count) in enumerate(zip(self.class_names, counts)):
+            percentage = (count / total) * 100
+            print(f"  {name}: {count} images ({percentage:.1f}%)")
+        
         self.class_weights = {i: total/(len(self.class_names)*c) for i, c in enumerate(counts)}
-        print(f"Class weights: {self.class_weights}")
+        print(f"\nClass weights: {self.class_weights}")
         
     def preprocess_datasets(self):
-        """Apply preprocessing and augmentation to datasets"""
-        print("Preprocessing datasets...")
+        """Enhanced preprocessing pipeline"""
+        print("\nPreprocessing datasets...")
         preprocess_input = keras.applications.efficientnet.preprocess_input
         
-        def prep(ds, augment=False, shuffle=False):
+        def prep(ds, augment=False, shuffle=False, cache=False):
+            if cache:
+                ds = ds.cache()
+            if shuffle:
+                ds = ds.shuffle(1000, seed=self.seed)
             if augment:
                 ds = ds.map(lambda x, y: (self.data_augmentation(x, training=True), y),
                            num_parallel_calls=tf.data.AUTOTUNE)
             ds = ds.map(lambda x, y: (preprocess_input(x), y), 
                        num_parallel_calls=tf.data.AUTOTUNE)
-            if shuffle:
-                ds = ds.shuffle(1000, seed=self.seed)
             return ds.prefetch(tf.data.AUTOTUNE)
         
-        self.train_ds = prep(self.train_ds, augment=True, shuffle=True)
-        self.val_ds = prep(self.val_ds)
-        self.test_ds = prep(self.test_ds)
+        self.train_ds = prep(self.train_ds, augment=True, shuffle=True, cache=False)
+        self.val_ds = prep(self.val_ds, cache=True)
+        self.test_ds = prep(self.test_ds, cache=True)
         
     def build_model(self):
-        """Build EfficientNetB0-based model"""
-        print("Building model...")
+        """Build enhanced model with better architecture"""
+        print("\nBuilding model...")
         
-        # Create base model without loading weights first
+        # Use EfficientNetB0 backbone
         base_model = keras.applications.EfficientNetB0(
-            weights=None,  # Don't load weights yet
+            weights=None,
             include_top=False,
             input_shape=(self.img_size[0], self.img_size[1], 3)
         )
         
-        # Now load the weights
-        base_model.load_weights(
-            keras.utils.get_file(
-                'efficientnetb0_notop.h5',
-                'https://storage.googleapis.com/keras-applications/efficientnetb0_notop.h5',
-                cache_subdir='models'
-            ),
-            skip_mismatch=True  # Skip mismatched layers
-        )
-        base_model.trainable = False  # Freeze initially
+        # Load weights with skip_mismatch
+        try:
+            base_model.load_weights(
+                keras.utils.get_file(
+                    'efficientnetb0_notop.h5',
+                    'https://storage.googleapis.com/keras-applications/efficientnetb0_notop.h5',
+                    cache_subdir='models'
+                ),
+                skip_mismatch=True
+            )
+            print("Pretrained weights loaded successfully")
+        except Exception as e:
+            print(f"Warning: Could not load pretrained weights: {e}")
         
-        # Build model
+        base_model.trainable = False
+        
+        # Enhanced head architecture
         inputs = keras.Input(shape=(self.img_size[0], self.img_size[1], 3))
+        
+        # Apply augmentation in the model
         x = self.data_augmentation(inputs)
         x = keras.applications.efficientnet.preprocess_input(x)
+        
+        # Feature extraction
         x = base_model(x, training=False)
         x = layers.GlobalAveragePooling2D()(x)
+        
+        # Deeper classification head with regularization
+        x = layers.BatchNormalization()(x)
         x = layers.Dropout(0.5)(x)
-        x = layers.Dense(256, activation="relu", 
+        x = layers.Dense(512, activation="relu", 
                         kernel_regularizer=keras.regularizers.l2(1e-4))(x)
         x = layers.BatchNormalization()(x)
         x = layers.Dropout(0.4)(x)
+        x = layers.Dense(256, activation="relu",
+                        kernel_regularizer=keras.regularizers.l2(1e-4))(x)
+        x = layers.BatchNormalization()(x)
+        x = layers.Dropout(0.3)(x)
+        
+        # Output layer
         outputs = layers.Dense(len(self.class_names), activation="softmax")(x)
         
         self.model = keras.Model(inputs, outputs)
         self.base_model = base_model
         
-        print(f"Model built successfully!")
-        print(f"Input shape: {self.model.input_shape}")
-        print(f"Output shape: {self.model.output_shape}")
+        print("Model built successfully")
+        print(f"   Input shape: {self.model.input_shape}")
+        print(f"   Output shape: {self.model.output_shape}")
+        print(f"   Total parameters: {self.model.count_params():,}")
         
     def train_phase1(self):
-        """Phase 1: Train with frozen base model"""
-        print("\n" + "="*50)
+        """Phase 1: Train with frozen backbone"""
+        print("\n" + "="*60)
         print("PHASE 1: Training with frozen backbone")
-        print("="*50)
+        print("="*60)
+        
+        # Cosine decay learning rate
+        initial_lr = 1e-3
+        lr_schedule = keras.optimizers.schedules.CosineDecay(
+            initial_lr, decay_steps=len(self.train_ds) * 20
+        )
         
         self.model.compile(
-            optimizer=keras.optimizers.Adam(1e-3),
+            optimizer=keras.optimizers.Adam(learning_rate=lr_schedule),
             loss="sparse_categorical_crossentropy",
-            metrics=["accuracy"]
+            metrics=["accuracy", keras.metrics.TopKCategoricalAccuracy(k=2, name='top2_accuracy')]
         )
         
         checkpoint_path = os.path.join(self.model_save_dir, "best_model_phase1.keras")
         callbacks = [
-            keras.callbacks.EarlyStopping(patience=10, restore_best_weights=True),
-            keras.callbacks.ModelCheckpoint(checkpoint_path, save_best_only=True),
-            keras.callbacks.ReduceLROnPlateau(factor=0.2, patience=5, min_lr=1e-6)
+            keras.callbacks.EarlyStopping(
+                patience=12, 
+                restore_best_weights=True,
+                monitor='val_accuracy'
+            ),
+            keras.callbacks.ModelCheckpoint(
+                checkpoint_path, 
+                save_best_only=True,
+                monitor='val_accuracy',
+                mode='max'
+            ),
+            keras.callbacks.ReduceLROnPlateau(
+                factor=0.3, 
+                patience=5, 
+                min_lr=1e-7,
+                monitor='val_loss'
+            )
         ]
         
-        history1 = self.model.fit(
+        history = self.model.fit(
             self.train_ds,
             validation_data=self.val_ds,
-            epochs=15,
+            epochs=20,
             class_weight=self.class_weights,
-            callbacks=callbacks
+            callbacks=callbacks,
+            verbose=1
         )
         
-        return history1
+        return history
         
     def train_phase2(self):
-        """Phase 2: Fine-tune last layers of base model"""
-        print("\n" + "="*50)
+        """Phase 2: Fine-tune with unfrozen layers"""
+        print("\n" + "="*60)
         print("PHASE 2: Fine-tuning backbone layers")
-        print("="*50)
+        print("="*60)
         
-        # Unfreeze last 30 layers
+        # Unfreeze more layers for better adaptation
         self.base_model.trainable = True
-        for layer in self.base_model.layers[:-30]:
+        for layer in self.base_model.layers[:-50]:
             layer.trainable = False
         
+        print(f"Trainable layers: {sum([1 for layer in self.model.layers if layer.trainable])}")
+        
+        # Lower learning rate for fine-tuning
         self.model.compile(
-            optimizer=keras.optimizers.Adam(1e-5),
+            optimizer=keras.optimizers.Adam(learning_rate=5e-6),
             loss="sparse_categorical_crossentropy",
-            metrics=["accuracy"]
+            metrics=["accuracy", keras.metrics.TopKCategoricalAccuracy(k=2, name='top2_accuracy')]
         )
         
         checkpoint_path = os.path.join(self.model_save_dir, "best_model_phase2.keras")
         callbacks = [
-            keras.callbacks.EarlyStopping(patience=10, restore_best_weights=True),
-            keras.callbacks.ModelCheckpoint(checkpoint_path, save_best_only=True),
-            keras.callbacks.ReduceLROnPlateau(factor=0.2, patience=5, min_lr=1e-6)
+            keras.callbacks.EarlyStopping(
+                patience=15, 
+                restore_best_weights=True,
+                monitor='val_accuracy'
+            ),
+            keras.callbacks.ModelCheckpoint(
+                checkpoint_path, 
+                save_best_only=True,
+                monitor='val_accuracy',
+                mode='max'
+            ),
+            keras.callbacks.ReduceLROnPlateau(
+                factor=0.5, 
+                patience=6, 
+                min_lr=1e-8,
+                monitor='val_loss'
+            )
         ]
         
-        history2 = self.model.fit(
+        history = self.model.fit(
             self.train_ds,
             validation_data=self.val_ds,
             epochs=self.epochs,
             class_weight=self.class_weights,
-            callbacks=callbacks
+            callbacks=callbacks,
+            verbose=1
         )
         
-        return history2
+        return history
         
     def evaluate(self):
-        """Evaluate model on test set"""
-        print("\n" + "="*50)
-        print("EVALUATION")
-        print("="*50)
+        """Detailed evaluation on test set"""
+        print("\n" + "="*60)
+        print("FINAL EVALUATION")
+        print("="*60)
         
-        test_loss, test_acc = self.model.evaluate(self.test_ds)
-        print(f"✅ Test Accuracy: {test_acc:.4f}")
-        print(f"✅ Test Loss: {test_loss:.4f}")
+        # Overall metrics
+        results = self.model.evaluate(self.test_ds, verbose=1)
+        print(f"\nTest Loss: {results[0]:.4f}")
+        print(f"Test Accuracy: {results[1]:.4f}")
+        print(f"Top-2 Accuracy: {results[2]:.4f}")
         
-        return test_loss, test_acc
+        # Per-class accuracy
+        print("\nPer-Class Performance:")
+        y_true = []
+        y_pred = []
+        
+        for images, labels in self.test_ds:
+            predictions = self.model.predict(images, verbose=0)
+            y_true.extend(labels.numpy())
+            y_pred.extend(np.argmax(predictions, axis=1))
+        
+        from sklearn.metrics import classification_report, confusion_matrix
+        
+        print("\nClassification Report:")
+        print(classification_report(y_true, y_pred, target_names=self.class_names))
+        
+        print("\nConfusion Matrix:")
+        cm = confusion_matrix(y_true, y_pred)
+        print(cm)
+        
+        # Per-class accuracy
+        for i, class_name in enumerate(self.class_names):
+            class_acc = cm[i, i] / cm[i].sum() if cm[i].sum() > 0 else 0
+            print(f"  {class_name}: {class_acc*100:.2f}%")
+        
+        return results
         
     def save_model(self):
-        """Save final model"""
+        """Save final model with metadata"""
         timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-        save_path = os.path.join(self.model_save_dir, f"posture_model_final_{timestamp}.keras")
+        save_path = os.path.join(self.model_save_dir, f"posture_model_{timestamp}.keras")
         self.model.save(save_path)
-        print(f"\n✅ Final model saved at: {save_path}")
+        print(f"\nFinal model saved at: {save_path}")
         
-        # Also save class names
+        # Save class names
         class_names_path = os.path.join(self.model_save_dir, "class_names.txt")
         with open(class_names_path, 'w') as f:
             f.write('\n'.join(self.class_names))
-        print(f"✅ Class names saved at: {class_names_path}")
+        print(f"Class names saved at: {class_names_path}")
+        
+        # Save model info
+        info_path = os.path.join(self.model_save_dir, f"model_info_{timestamp}.txt")
+        with open(info_path, 'w') as f:
+            f.write(f"Model: EfficientNetB0 + Enhanced Head\n")
+            f.write(f"Classes: {', '.join(self.class_names)}\n")
+            f.write(f"Image Size: {self.img_size}\n")
+            f.write(f"Total Parameters: {self.model.count_params():,}\n")
+            f.write(f"Timestamp: {timestamp}\n")
         
         return save_path
 
 
 def main():
     parser = argparse.ArgumentParser(description='Train posture classification model')
-    parser.add_argument('--data_dir', type=str, default='./Datasets',
-                       help='Path to dataset directory containing Train and Test folders')
-    parser.add_argument('--model_save_dir', type=str, default='./models',
-                       help='Directory to save trained models')
-    parser.add_argument('--img_size', type=int, default=224,
-                       help='Image size (default: 224)')
-    parser.add_argument('--batch_size', type=int, default=32,
-                       help='Batch size (default: 32)')
-    parser.add_argument('--epochs', type=int, default=40,
-                       help='Number of epochs for phase 2 (default: 40)')
-    parser.add_argument('--seed', type=int, default=123,
-                       help='Random seed (default: 123)')
+    parser.add_argument('--data_dir', type=str, default='./Datasets')
+    parser.add_argument('--model_save_dir', type=str, default='./models')
+    parser.add_argument('--img_size', type=int, default=224)
+    parser.add_argument('--batch_size', type=int, default=32)
+    parser.add_argument('--epochs', type=int, default=50)
+    parser.add_argument('--seed', type=int, default=123)
     
     args = parser.parse_args()
     
@@ -261,24 +369,22 @@ def main():
         'seed': args.seed
     }
     
-    print("="*50)
+    print("="*60)
     print("POSTURE CLASSIFICATION TRAINING")
-    print("="*50)
+    print("="*60)
     print(f"TensorFlow version: {tf.__version__}")
-    print(f"Configuration: {config}")
+    print(f"Configuration: {config}\n")
     
     # Initialize trainer
     trainer = PostureTrainer(config)
     
-    # Load and prepare data
+    # Training pipeline
     trainer.load_datasets()
     trainer.compute_class_weights()
     trainer.preprocess_datasets()
-    
-    # Build model
     trainer.build_model()
     
-    # Training
+    # Two-phase training
     history1 = trainer.train_phase1()
     history2 = trainer.train_phase2()
     
@@ -288,12 +394,14 @@ def main():
     # Save
     model_path = trainer.save_model()
     
-    print("\n" + "="*50)
-    print("TRAINING COMPLETE!")
-    print("="*50)
+    print("\n" + "="*60)
+    print("TRAINING COMPLETE")
+    print("="*60)
     print(f"Model saved at: {model_path}")
+    print("\nTo use the model:")
+    print("  python app.py")
+    print("  Then visit: http://localhost:5000")
 
 
 if __name__ == "__main__":
     main()
-
