@@ -199,7 +199,7 @@ class PostureTrainer:
         self.model.compile(
             optimizer=keras.optimizers.Adam(learning_rate=lr_schedule),
             loss="sparse_categorical_crossentropy",
-            metrics=["accuracy", keras.metrics.TopKCategoricalAccuracy(k=2, name='top2_accuracy')]
+            metrics=["accuracy"]
         )
         
         checkpoint_path = os.path.join(self.model_save_dir, "best_model_phase1.keras")
@@ -251,7 +251,7 @@ class PostureTrainer:
         self.model.compile(
             optimizer=keras.optimizers.Adam(learning_rate=5e-6),
             loss="sparse_categorical_crossentropy",
-            metrics=["accuracy", keras.metrics.TopKCategoricalAccuracy(k=2, name='top2_accuracy')]
+            metrics=["accuracy"]
         )
         
         checkpoint_path = os.path.join(self.model_save_dir, "best_model_phase2.keras")
@@ -296,7 +296,6 @@ class PostureTrainer:
         results = self.model.evaluate(self.test_ds, verbose=1)
         print(f"\nTest Loss: {results[0]:.4f}")
         print(f"Test Accuracy: {results[1]:.4f}")
-        print(f"Top-2 Accuracy: {results[2]:.4f}")
         
         # Per-class accuracy
         print("\nPer-Class Performance:")
