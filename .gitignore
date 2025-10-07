@@ -2,7 +2,7 @@ venv/
 results/
 __pycache__/
 static/
-/models/*
+models/
 uploads/
 *.pyc
 *.pyo
