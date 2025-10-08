@@ -216,7 +216,18 @@ def process_image(image_path):
     # CNN prediction
     cnn_input = preprocess_frame(frame)
     prediction = model.predict(cnn_input, verbose=0)
-    predicted_class = class_names[np.argmax(prediction)]
+    predicted_idx = np.argmax(prediction)
+    
+    # Safety check for index out of range (handle old 3-class models)
+    if predicted_idx >= len(class_names):
+        # Map old indices: 0->Arm_Raise, 2->Squats
+        if predicted_idx == 2:
+            predicted_class = 'Squats'
+        else:
+            predicted_class = class_names[0] if predicted_idx < len(class_names) else 'Arm_Raise'
+    else:
+        predicted_class = class_names[predicted_idx]
+    
     confidence = float(np.max(prediction))
     
     # MediaPipe detection
@@ -306,7 +317,18 @@ def process_video(video_path):
             # CNN prediction
             cnn_input = preprocess_frame(frame)
             prediction = model.predict(cnn_input, verbose=0)
-            predicted_class = class_names[np.argmax(prediction)]
+            predicted_idx = np.argmax(prediction)
+            
+            # Safety check for index out of range (handle old 3-class models)
+            if predicted_idx >= len(class_names):
+                # Map old indices: 0->Arm_Raise, 2->Squats
+                if predicted_idx == 2:
+                    predicted_class = 'Squats'
+                else:
+                    predicted_class = class_names[0] if predicted_idx < len(class_names) else 'Arm_Raise'
+            else:
+                predicted_class = class_names[predicted_idx]
+            
             confidence = float(np.max(prediction))
             
             # MediaPipe detection
