@@ -212,6 +212,93 @@ def check_posture_correctness(posture, landmarks):
     return False
 
 
+def generate_recommendations(pose, is_correct, correctness_data):
+    """Generate personalized recommendations based on pose and performance"""
+    recommendations = {
+        'title': '',
+        'tips': [],
+        'next_steps': []
+    }
+    
+    if pose == "Arm_Raise":
+        if is_correct:
+            recommendations['title'] = "Excellent Arm Raise Form! 🎉"
+            recommendations['tips'] = [
+                "Your arms are fully extended with proper elbow positioning",
+                "Maintain this form for maximum Zumba effectiveness",
+                "Keep your core engaged while raising arms",
+                "Remember to breathe steadily throughout the movement"
+            ]
+            recommendations['next_steps'] = [
+                "Try adding rhythmic variations to your arm raises",
+                "Practice with music to improve timing",
+                "Challenge yourself with faster movements"
+            ]
+        else:
+            recommendations['title'] = "Let's Improve Your Arm Raise 💪"
+            recommendations['tips'] = [
+                "Ensure both arms are fully extended (straighten your elbows)",
+                "Raise your elbows above shoulder level",
+                "Keep arms symmetrical and aligned",
+                "Engage your shoulder muscles throughout the movement"
+            ]
+            recommendations['next_steps'] = [
+                "Practice in front of a mirror to check arm alignment",
+                "Start slowly and focus on full extension",
+                "Use lighter weights initially if using equipment",
+                "Film yourself to identify specific areas to improve"
+            ]
+    
+    elif pose == "Squats":
+        if is_correct:
+            recommendations['title'] = "Perfect Squat Form! 🏆"
+            recommendations['tips'] = [
+                "Your knee bend and hip position are excellent",
+                "Proper squat depth achieved for Zumba movements",
+                "Good lower body alignment maintained",
+                "Keep this form to maximize workout benefits"
+            ]
+            recommendations['next_steps'] = [
+                "Try varying your squat depth for different routines",
+                "Add pulse movements at the bottom position",
+                "Practice explosive up movements for cardio benefit",
+                "Maintain this form in longer Zumba sessions"
+            ]
+        else:
+            num_frames = len(correctness_data) if correctness_data else 0
+            
+            if num_frames == 0:
+                recommendations['title'] = "No Squat Movement Detected 🔍"
+                recommendations['tips'] = [
+                    "Ensure you're actually squatting (bending knees)",
+                    "Lower your hips by bending both knees",
+                    "Aim for 90-degree knee bend (or comfortable depth)",
+                    "Keep your back straight and chest up"
+                ]
+                recommendations['next_steps'] = [
+                    "Record a video showing clear squat movements",
+                    "Practice basic squat technique before filming",
+                    "Ensure full body is visible in the video",
+                    "Hold squat position for 2-3 seconds for better detection"
+                ]
+            else:
+                recommendations['title'] = "Squat Form Needs Improvement 🎯"
+                recommendations['tips'] = [
+                    "Bend your knees deeper (aim for 90-degree angle)",
+                    "Lower your hips more - imagine sitting in a chair",
+                    "Keep your weight on your heels, not toes",
+                    "Maintain straight back throughout the movement"
+                ]
+                recommendations['next_steps'] = [
+                    "Practice squats slowly to build muscle memory",
+                    "Use a chair behind you as a depth guide",
+                    "Focus on controlled descent and ascent",
+                    "Strengthen your leg muscles with regular practice"
+                ]
+    
+    return recommendations
+
+
 def process_image(image_path):
     """Process a single image and return simplified result"""
     frame = cv2.imread(image_path)
@@ -278,14 +365,38 @@ def process_image(image_path):
         result_path = os.path.join(app.config['RESULTS_FOLDER'], result_filename)
         cv2.imwrite(result_path, frame)
         
+        # Generate recommendations
+        recommendations = generate_recommendations(posture, correct, [correct])
+        
         # Return simplified result
         return result_filename, {
             'detected_pose': display_name,
             'status': status,
-            'result': f"{display_name} {status}"
+            'result': f"{display_name} {status}",
+            'recommendations': recommendations
         }
     else:
-        return None, "Error: No human detected in image"
+        # No human detected - provide helpful recommendations
+        error_data = {
+            'error_type': 'no_human_detected',
+            'message': 'No human detected in image',
+            'recommendations': {
+                'title': 'Unable to Detect Person 🔍',
+                'tips': [
+                    'Ensure a person is clearly visible in the image',
+                    'Make sure the entire body is in frame (head to feet)',
+                    'Use good lighting - avoid dark or backlit images',
+                    'Remove obstacles blocking the view of the person'
+                ],
+                'next_steps': [
+                    'Retake the photo in a well-lit area',
+                    'Stand at least 6 feet away from camera',
+                    'Use a plain background for better detection',
+                    'Ensure full body is visible without cropping'
+                ]
+            }
+        }
+        return None, error_data
 
 
 def process_video(video_path):
@@ -402,7 +513,27 @@ def process_video(video_path):
     
     # Determine dominant pose
     if pose_detections['Arm_Raise'] == 0 and pose_detections['Squats'] == 0:
-        return None, "Error: No valid poses detected in video"
+        error_data = {
+            'error_type': 'no_poses_detected',
+            'message': 'No valid poses detected in video',
+            'recommendations': {
+                'title': 'No Zumba Poses Detected 🔍',
+                'tips': [
+                    'Ensure you are performing clear Arm Raise or Squat movements',
+                    'Make sure your entire body is visible throughout the video',
+                    'Perform the poses deliberately and hold them briefly',
+                    'Use good lighting and avoid shadows on your body'
+                ],
+                'next_steps': [
+                    'Record a new video with clear, deliberate movements',
+                    'For Arm Raise: Fully extend arms above your head',
+                    'For Squats: Bend knees to at least 90 degrees',
+                    'Hold each pose for 2-3 seconds for better detection',
+                    'Ensure camera captures your full body from head to feet'
+                ]
+            }
+        }
+        return None, error_data
     
     dominant_pose = 'Arm_Raise' if pose_detections['Arm_Raise'] >= pose_detections['Squats'] else 'Squats'
     
@@ -434,10 +565,14 @@ def process_video(video_path):
     display_name = "Arm Raise" if dominant_pose == "Arm_Raise" else "Squats"
     status = "Correct" if is_correct else "Incorrect"
     
+    # Generate personalized recommendations
+    recommendations = generate_recommendations(dominant_pose, is_correct, correctness_data[dominant_pose])
+    
     summary = {
         'detected_pose': display_name,
         'status': status,
-        'result': f"{display_name} {status}"
+        'result': f"{display_name} {status}",
+        'recommendations': recommendations
     }
     
     return result_filename, summary
@@ -502,10 +637,19 @@ def predict():
                 'data': result_data
             })
         else:
-            return jsonify({
-                'success': False,
-                'error': result_data
-            }), 400
+            # Handle errors with recommendations
+            if isinstance(result_data, dict) and 'recommendations' in result_data:
+                return jsonify({
+                    'success': False,
+                    'error': result_data['message'],
+                    'error_type': result_data.get('error_type', 'unknown'),
+                    'recommendations': result_data['recommendations']
+                }), 400
+            else:
+                return jsonify({
+                    'success': False,
+                    'error': result_data
+                }), 400
             
     except Exception as e:
         return jsonify({'error': str(e)}), 500

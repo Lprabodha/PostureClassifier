@@ -671,6 +671,74 @@
             display: block;
         }
 
+        /* Recommendations Section */
+        .recommendations-section {
+            margin-top: 40px;
+            padding-top: 40px;
+            border-top: 2px solid #e2e8f0;
+        }
+
+        .recommendations-title {
+            font-size: 1.8em;
+            font-weight: 700;
+            color: #0f172a;
+            text-align: center;
+            margin-bottom: 35px;
+        }
+
+        .recommendations-box {
+            background: #f8fafc;
+            padding: 30px;
+            border-radius: 16px;
+            margin-bottom: 25px;
+            border-left: 4px solid #6366f1;
+        }
+
+        .rec-subtitle {
+            font-size: 1.3em;
+            font-weight: 700;
+            color: #0f172a;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .rec-list {
+            list-style: none;
+            padding: 0;
+        }
+
+        .rec-list li {
+            color: #475569;
+            font-size: 1em;
+            line-height: 1.8;
+            padding: 12px 0 12px 35px;
+            position: relative;
+            border-bottom: 1px solid #e2e8f0;
+        }
+
+        .rec-list li:last-child {
+            border-bottom: none;
+        }
+
+        .rec-list li::before {
+            content: '✓';
+            position: absolute;
+            left: 0;
+            top: 12px;
+            width: 24px;
+            height: 24px;
+            background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+            color: white;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            font-size: 0.8em;
+        }
+
         /* How It Works Section */
         .how-it-works {
             background: white;
@@ -1314,7 +1382,11 @@
                 if (data.success) {
                     displayResult(data);
                 } else {
-                    showError(data.error || 'An error occurred during analysis');
+                    if (data.recommendations) {
+                        showErrorWithRecommendations(data.error, data.recommendations);
+                    } else {
+                        showError(data.error || 'An error occurred during analysis');
+                    }
                 }
             } catch (err) {
                 showError('Network error: ' + err.message);
@@ -1350,13 +1422,101 @@
             html += '</div>';
             html += '</div>';
 
+            // Add Recommendations
+            if (data.data.recommendations) {
+                const rec = data.data.recommendations;
+                html += '<div class="recommendations-section">';
+                html += `<h3 class="recommendations-title">${rec.title}</h3>`;
+                
+                if (rec.tips && rec.tips.length > 0) {
+                    html += '<div class="recommendations-box">';
+                    html += '<h4 class="rec-subtitle">💡 Key Tips</h4>';
+                    html += '<ul class="rec-list">';
+                    rec.tips.forEach(tip => {
+                        html += `<li>${tip}</li>`;
+                    });
+                    html += '</ul>';
+                    html += '</div>';
+                }
+                
+                if (rec.next_steps && rec.next_steps.length > 0) {
+                    html += '<div class="recommendations-box">';
+                    html += '<h4 class="rec-subtitle">🎯 Next Steps</h4>';
+                    html += '<ul class="rec-list">';
+                    rec.next_steps.forEach(step => {
+                        html += `<li>${step}</li>`;
+                    });
+                    html += '</ul>';
+                    html += '</div>';
+                }
+                
+                html += '</div>';
+            }
+
             resultContent.innerHTML = html;
             result.classList.add('show');
             result.scrollIntoView({ behavior: 'smooth', block: 'start' });
         }
 
         function showError(message) {
-            error.textContent = '⚠️ ' + message;
+            error.innerHTML = '⚠️ ' + message;
+            error.classList.add('show');
+            error.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
+
+        function showErrorWithRecommendations(errorMsg, recommendations) {
+            let html = '';
+            
+            html += '<div style="background: white; border-radius: 16px; padding: 40px; border: 2px solid #ef4444;">';
+            
+            // Error Message
+            html += '<div style="text-align: center; margin-bottom: 30px;">';
+            html += '<div style="font-size: 3em; margin-bottom: 15px;">⚠️</div>';
+            html += `<h3 style="font-size: 1.5em; color: #dc2626; margin-bottom: 10px;">Analysis Failed</h3>`;
+            html += `<p style="color: #64748b; font-size: 1.05em;">${errorMsg}</p>`;
+            html += '</div>';
+            
+            // Recommendations
+            html += '<div class="recommendations-section" style="border-top: none; margin-top: 0; padding-top: 0;">';
+            html += `<h3 class="recommendations-title">${recommendations.title}</h3>`;
+            
+            if (recommendations.tips && recommendations.tips.length > 0) {
+                html += '<div class="recommendations-box">';
+                html += '<h4 class="rec-subtitle">💡 What Went Wrong</h4>';
+                html += '<ul class="rec-list">';
+                recommendations.tips.forEach(tip => {
+                    html += `<li>${tip}</li>`;
+                });
+                html += '</ul>';
+                html += '</div>';
+            }
+            
+            if (recommendations.next_steps && recommendations.next_steps.length > 0) {
+                html += '<div class="recommendations-box">';
+                html += '<h4 class="rec-subtitle">🎯 How to Fix It</h4>';
+                html += '<ul class="rec-list">';
+                recommendations.next_steps.forEach(step => {
+                    html += `<li>${step}</li>`;
+                });
+                html += '</ul>';
+                html += '</div>';
+            }
+            
+            html += '</div>';
+            
+            // Try Again Button
+            html += '<div style="text-align: center; margin-top: 30px;">';
+            html += '<button class="btn-primary" onclick="location.reload()" style="display: inline-flex;">';
+            html += '<span>🔄</span><span>Try Again</span>';
+            html += '</button>';
+            html += '</div>';
+            
+            html += '</div>';
+            
+            error.innerHTML = html;
+            error.style.background = 'transparent';
+            error.style.border = 'none';
+            error.style.padding = '0';
             error.classList.add('show');
             error.scrollIntoView({ behavior: 'smooth', block: 'center' });
         }
