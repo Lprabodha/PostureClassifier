@@ -409,12 +409,26 @@ def process_video(video_path):
     # Calculate correctness for dominant pose
     if correctness_data[dominant_pose]:
         correct_ratio = sum(correctness_data[dominant_pose]) / len(correctness_data[dominant_pose])
-        is_correct = correct_ratio >= 0.5  # 50% threshold for overall correctness (more lenient)
-        print(f"Dominant pose: {dominant_pose}, Correct ratio: {correct_ratio:.2%}, Frames evaluated: {len(correctness_data[dominant_pose])}")
+        frames_evaluated = len(correctness_data[dominant_pose])
+        
+        # Require minimum frames for reliable assessment
+        if frames_evaluated < 5:
+            # Too few frames - require 100% correctness
+            is_correct = correct_ratio >= 1.0
+            print(f"Dominant pose: {dominant_pose}, Correct ratio: {correct_ratio:.2%}, Frames evaluated: {frames_evaluated} (few frames - strict)")
+        elif frames_evaluated < 15:
+            # Moderate frames - require 70% correctness
+            is_correct = correct_ratio >= 0.7
+            print(f"Dominant pose: {dominant_pose}, Correct ratio: {correct_ratio:.2%}, Frames evaluated: {frames_evaluated} (moderate - 70% threshold)")
+        else:
+            # Many frames - require 60% correctness
+            is_correct = correct_ratio >= 0.6
+            print(f"Dominant pose: {dominant_pose}, Correct ratio: {correct_ratio:.2%}, Frames evaluated: {frames_evaluated} (many frames - 60% threshold)")
     else:
-        # If no frames were evaluated (all standing), default to correct
-        is_correct = True
-        print(f"Dominant pose: {dominant_pose}, No correctness frames evaluated - defaulting to Correct")
+        # If no frames were evaluated (all standing/not performing pose)
+        # This means the pose was not actually performed properly
+        is_correct = False
+        print(f"Dominant pose: {dominant_pose}, No active pose frames found - marking as Incorrect")
     
     # Format output: one of 4 possible results
     display_name = "Arm Raise" if dominant_pose == "Arm_Raise" else "Squats"

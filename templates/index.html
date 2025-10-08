@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Zumba AI - AI-Powered Pose Analysis</title>
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     <style>
         * {
             margin: 0;
@@ -13,28 +13,29 @@
         }
 
         body {
-            font-family: 'Poppins', sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            background: #ffffff;
             min-height: 100vh;
             display: flex;
             flex-direction: column;
+            color: #1a202c;
         }
 
-        /* Header Styles */
+        /* Header */
         .header {
-            background: rgba(255, 255, 255, 0.98);
-            backdrop-filter: blur(10px);
+            background: #ffffff;
             padding: 20px 0;
-            box-shadow: 0 2px 20px rgba(0, 0, 0, 0.1);
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
             position: sticky;
             top: 0;
             z-index: 100;
+            border-bottom: 1px solid #e2e8f0;
         }
 
         .header-content {
-            max-width: 1200px;
+            max-width: 1280px;
             margin: 0 auto;
-            padding: 0 30px;
+            padding: 0 40px;
             display: flex;
             justify-content: space-between;
             align-items: center;
@@ -44,146 +45,509 @@
             display: flex;
             align-items: center;
             gap: 15px;
+            text-decoration: none;
         }
 
         .logo-icon {
-            font-size: 2.5em;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            padding: 10px;
+            width: 50px;
+            height: 50px;
+            background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
             border-radius: 12px;
             display: flex;
             align-items: center;
             justify-content: center;
-        }
-
-        .logo-text {
-            display: flex;
-            flex-direction: column;
-        }
-
-        .logo-title {
             font-size: 1.8em;
+            box-shadow: 0 4px 12px rgba(99, 102, 241, 0.3);
+        }
+
+        .logo-text h2 {
+            font-size: 1.5em;
             font-weight: 700;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
-            background-clip: text;
         }
 
-        .logo-subtitle {
+        .logo-text p {
             font-size: 0.75em;
-            color: #718096;
-            font-weight: 400;
+            color: #64748b;
+            font-weight: 500;
         }
 
         .nav-menu {
             display: flex;
             align-items: center;
-            gap: 30px;
+            gap: 40px;
         }
 
         .nav-link {
-            color: #4a5568;
+            color: #475569;
             text-decoration: none;
             font-weight: 500;
-            transition: all 0.3s ease;
-            position: relative;
-        }
-
-        .nav-link::after {
-            content: '';
-            position: absolute;
-            bottom: -5px;
-            left: 0;
-            width: 0;
-            height: 2px;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            transition: width 0.3s ease;
-        }
-
-        .nav-link:hover::after {
-            width: 100%;
+            font-size: 0.95em;
+            transition: color 0.3s ease;
         }
 
         .nav-link:hover {
-            color: #667eea;
+            color: #6366f1;
         }
 
         .auth-buttons {
             display: flex;
-            gap: 15px;
+            gap: 12px;
+        }
+
+        .btn-login, .btn-register {
+            padding: 10px 24px;
+            border-radius: 8px;
+            font-weight: 600;
+            font-size: 0.9em;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            display: inline-block;
         }
 
         .btn-login {
-            padding: 10px 25px;
-            border: 2px solid #667eea;
+            border: 2px solid #e2e8f0;
             background: transparent;
-            color: #667eea;
-            border-radius: 50px;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            text-decoration: none;
-            display: inline-block;
+            color: #475569;
         }
 
         .btn-login:hover {
-            background: #667eea;
-            color: white;
-            transform: translateY(-2px);
+            border-color: #6366f1;
+            color: #6366f1;
         }
 
         .btn-register {
-            padding: 10px 25px;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
             color: white;
-            border-radius: 50px;
-            font-weight: 600;
-            cursor: pointer;
             border: none;
-            transition: all 0.3s ease;
-            text-decoration: none;
-            display: inline-block;
+            box-shadow: 0 4px 12px rgba(99, 102, 241, 0.3);
         }
 
         .btn-register:hover {
+            box-shadow: 0 6px 20px rgba(99, 102, 241, 0.4);
             transform: translateY(-2px);
-            box-shadow: 0 10px 25px rgba(102, 126, 234, 0.4);
         }
 
-        /* Mobile Menu Toggle */
-        .menu-toggle {
-            display: none;
-            flex-direction: column;
-            gap: 5px;
-            cursor: pointer;
+        /* Hero Section */
+        .hero-section {
+            background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+            padding: 80px 40px;
+            text-align: center;
         }
 
-        .menu-toggle span {
-            width: 25px;
-            height: 3px;
-            background: #667eea;
-            border-radius: 3px;
-            transition: all 0.3s ease;
+        .hero-content {
+            max-width: 1280px;
+            margin: 0 auto;
+        }
+
+        .hero-badge {
+            display: inline-block;
+            background: #ede9fe;
+            color: #7c3aed;
+            padding: 8px 20px;
+            border-radius: 50px;
+            font-size: 0.85em;
+            font-weight: 600;
+            margin-bottom: 25px;
+        }
+
+        .hero-title {
+            font-size: 3.5em;
+            font-weight: 800;
+            color: #0f172a;
+            margin-bottom: 20px;
+            line-height: 1.2;
+        }
+
+        .hero-gradient-text {
+            background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 50%, #ec4899 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .hero-description {
+            font-size: 1.3em;
+            color: #64748b;
+            margin-bottom: 35px;
+            max-width: 700px;
+            margin-left: auto;
+            margin-right: auto;
+            line-height: 1.6;
+        }
+
+        .hero-stats {
+            display: flex;
+            justify-content: center;
+            gap: 50px;
+            margin-top: 40px;
+        }
+
+        .stat-item {
+            text-align: center;
+        }
+
+        .stat-number {
+            font-size: 2.5em;
+            font-weight: 800;
+            background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .stat-label {
+            color: #64748b;
+            font-size: 0.9em;
+            margin-top: 8px;
         }
 
         /* Main Content */
         .main-content {
-            flex: 1;
+            max-width: 1280px;
+            margin: 0 auto;
+            padding: 80px 40px;
+        }
+
+        .section-header {
+            text-align: center;
+            margin-bottom: 60px;
+        }
+
+        .section-title {
+            font-size: 2.5em;
+            font-weight: 700;
+            color: #0f172a;
+            margin-bottom: 15px;
+        }
+
+        .section-description {
+            font-size: 1.15em;
+            color: #64748b;
+            max-width: 650px;
+            margin: 0 auto;
+        }
+
+        /* Features Grid */
+        .features-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 30px;
+            margin-bottom: 80px;
+        }
+
+        .feature-card {
+            background: #ffffff;
+            padding: 40px;
+            border-radius: 16px;
+            border: 1px solid #e2e8f0;
+            transition: all 0.3s ease;
+        }
+
+        .feature-card:hover {
+            transform: translateY(-8px);
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+            border-color: #6366f1;
+        }
+
+        .feature-icon {
+            width: 60px;
+            height: 60px;
+            background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+            border-radius: 12px;
             display: flex;
             align-items: center;
             justify-content: center;
-            padding: 40px 20px;
+            font-size: 1.8em;
+            margin-bottom: 20px;
+            box-shadow: 0 8px 16px rgba(99, 102, 241, 0.3);
         }
 
-        .container {
+        .feature-title {
+            font-size: 1.3em;
+            font-weight: 700;
+            color: #0f172a;
+            margin-bottom: 12px;
+        }
+
+        .feature-description {
+            color: #64748b;
+            line-height: 1.7;
+            font-size: 0.95em;
+        }
+
+        /* Poses Section */
+        .poses-container {
+            background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+            padding: 60px 40px;
+            border-radius: 24px;
+            margin-bottom: 80px;
+            box-shadow: 0 20px 50px rgba(99, 102, 241, 0.3);
+        }
+
+        .poses-header {
+            text-align: center;
+            color: white;
+            margin-bottom: 40px;
+        }
+
+        .poses-header h3 {
+            font-size: 2em;
+            font-weight: 700;
+            margin-bottom: 12px;
+        }
+
+        .poses-header p {
+            opacity: 0.9;
+            font-size: 1.1em;
+        }
+
+        .poses-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 25px;
+        }
+
+        .pose-card {
+            background: white;
+            padding: 35px;
+            border-radius: 16px;
+            text-align: center;
+            transition: all 0.3s ease;
+        }
+
+        .pose-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.15);
+        }
+
+        .pose-emoji {
+            font-size: 4em;
+            margin-bottom: 20px;
+        }
+
+        .pose-name {
+            font-size: 1.4em;
+            font-weight: 700;
+            color: #0f172a;
+            margin-bottom: 10px;
+        }
+
+        .pose-details {
+            color: #64748b;
+            font-size: 0.9em;
+            line-height: 1.6;
+        }
+
+        /* Upload Section */
+        .upload-section {
             background: white;
             border-radius: 24px;
-            box-shadow: 0 30px 90px rgba(0, 0, 0, 0.25);
-            max-width: 900px;
-            width: 100%;
+            border: 2px solid #e2e8f0;
             padding: 50px;
-            animation: slideUp 0.6s ease-out;
+            margin-bottom: 40px;
+        }
+
+        .upload-area {
+            border: 3px dashed #cbd5e0;
+            border-radius: 20px;
+            padding: 80px 40px;
+            text-align: center;
+            transition: all 0.3s ease;
+            cursor: pointer;
+            background: #f8fafc;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .upload-area::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(135deg, rgba(99, 102, 241, 0.05) 0%, rgba(139, 92, 246, 0.05) 100%);
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .upload-area:hover::before {
+            opacity: 1;
+        }
+
+        .upload-area:hover {
+            border-color: #6366f1;
+            background: #fafbfc;
+        }
+
+        .upload-area.dragover {
+            border-color: #6366f1;
+            background: #ede9fe;
+            transform: scale(1.02);
+        }
+
+        .upload-icon {
+            font-size: 5em;
+            margin-bottom: 25px;
+            animation: float 3s ease-in-out infinite;
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translateY(0px); }
+            50% { transform: translateY(-15px); }
+        }
+
+        .upload-title {
+            font-size: 1.6em;
+            font-weight: 700;
+            color: #0f172a;
+            margin-bottom: 12px;
+        }
+
+        .upload-subtitle {
+            color: #64748b;
+            font-size: 1.05em;
+            margin-bottom: 25px;
+        }
+
+        .upload-formats {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            flex-wrap: wrap;
+        }
+
+        .format-badge {
+            background: #f1f5f9;
+            color: #475569;
+            padding: 8px 16px;
+            border-radius: 8px;
+            font-size: 0.85em;
+            font-weight: 600;
+        }
+
+        #fileInput {
+            display: none;
+        }
+
+        .selected-file {
+            background: #ede9fe;
+            padding: 25px;
+            border-radius: 16px;
+            margin-top: 30px;
+            display: none;
+            border-left: 4px solid #6366f1;
+        }
+
+        .selected-file.show {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+            animation: slideIn 0.3s ease-out;
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateX(-20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+
+        .file-icon-large {
+            font-size: 3em;
+        }
+
+        .file-details h4 {
+            font-size: 1.1em;
+            font-weight: 600;
+            color: #0f172a;
+            margin-bottom: 5px;
+        }
+
+        .file-details p {
+            color: #64748b;
+            font-size: 0.9em;
+        }
+
+        .btn-container {
+            text-align: center;
+            margin-top: 35px;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+            color: white;
+            border: none;
+            padding: 18px 45px;
+            border-radius: 12px;
+            font-size: 1.1em;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 8px 20px rgba(99, 102, 241, 0.3);
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 12px 30px rgba(99, 102, 241, 0.4);
+        }
+
+        .btn-primary:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        /* Loading */
+        .loading {
+            display: none;
+            text-align: center;
+            padding: 40px;
+        }
+
+        .loading.show {
+            display: block;
+        }
+
+        .spinner {
+            width: 60px;
+            height: 60px;
+            border: 5px solid #e2e8f0;
+            border-top: 5px solid #6366f1;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 25px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .loading-text {
+            font-size: 1.2em;
+            font-weight: 600;
+            color: #475569;
+        }
+
+        /* Result */
+        .result {
+            display: none;
+            margin-top: 50px;
+        }
+
+        .result.show {
+            display: block;
+            animation: slideUp 0.5s ease-out;
         }
 
         @keyframes slideUp {
@@ -197,215 +561,193 @@
             }
         }
 
-        .page-header {
+        .result-header {
+            background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+            color: white;
+            padding: 30px;
+            border-radius: 20px 20px 0 0;
             text-align: center;
-            margin-bottom: 40px;
         }
 
-        .page-logo-container {
-            display: inline-block;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            padding: 20px;
-            border-radius: 20px;
-            margin-bottom: 20px;
-            box-shadow: 0 10px 30px rgba(102, 126, 234, 0.3);
-            animation: pulse 2s ease-in-out infinite;
-        }
-
-        @keyframes pulse {
-            0%, 100% { transform: scale(1); }
-            50% { transform: scale(1.05); }
-        }
-
-        .page-logo {
-            font-size: 3.5em;
-            filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.2));
-        }
-
-        h1 {
-            color: #2d3748;
-            font-size: 2.8em;
+        .result-header h2 {
+            font-size: 2em;
             font-weight: 700;
-            margin-bottom: 12px;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
         }
 
-        .subtitle {
-            color: #718096;
-            font-size: 1.2em;
-            font-weight: 400;
-            margin-bottom: 10px;
+        .result-body {
+            background: white;
+            border: 2px solid #e2e8f0;
+            border-top: none;
+            padding: 40px;
+            border-radius: 0 0 20px 20px;
         }
 
-        /* Features */
-        .features {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-            gap: 20px;
+        .result-media {
             margin-bottom: 35px;
+            border-radius: 16px;
+            overflow: hidden;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
         }
 
-        .feature-card {
-            background: linear-gradient(135deg, #f7fafc 0%, #edf2f7 100%);
-            padding: 25px;
+        .result-image, .result-video {
+            max-width: 100%;
+            display: block;
+        }
+
+        .result-info {
+            background: #f8fafc;
+            padding: 40px;
             border-radius: 16px;
             text-align: center;
-            transition: all 0.3s ease;
-            border: 1px solid #e2e8f0;
         }
 
-        .feature-card:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 15px 35px rgba(102, 126, 234, 0.15);
-            border-color: #667eea;
+        .result-pose {
+            margin-bottom: 30px;
         }
 
-        .feature-icon {
+        .result-label {
+            font-size: 1em;
+            color: #64748b;
+            font-weight: 600;
+            margin-bottom: 10px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .result-value {
             font-size: 2.5em;
-            margin-bottom: 12px;
+            font-weight: 800;
+            color: #0f172a;
         }
 
-        .feature-title {
-            color: #2d3748;
-            font-weight: 600;
-            font-size: 1.1em;
-            margin-bottom: 8px;
-        }
-
-        .feature-desc {
-            color: #718096;
-            font-size: 0.9em;
-        }
-
-        /* Poses Section */
-        .poses-section {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        .result-status {
+            margin-top: 30px;
             padding: 25px;
-            border-radius: 18px;
-            margin-bottom: 35px;
-            box-shadow: 0 15px 40px rgba(102, 126, 234, 0.25);
+            border-radius: 12px;
         }
 
-        .poses-title {
-            color: white;
-            font-size: 1.3em;
-            font-weight: 600;
-            text-align: center;
-            margin-bottom: 18px;
+        .result-status.correct {
+            background: #d1fae5;
+            border: 2px solid #10b981;
         }
 
-        .pose-badges {
-            display: flex;
-            justify-content: center;
-            gap: 15px;
-            flex-wrap: wrap;
+        .result-status.incorrect {
+            background: #fee2e2;
+            border: 2px solid #ef4444;
         }
 
-        .pose-badge {
+        .status-icon {
+            font-size: 3em;
+            margin-bottom: 15px;
+        }
+
+        .status-text {
+            font-size: 2em;
+            font-weight: 700;
+        }
+
+        .status-text.correct {
+            color: #059669;
+        }
+
+        .status-text.incorrect {
+            color: #dc2626;
+        }
+
+        /* Error */
+        .error {
+            background: #fee2e2;
+            border: 2px solid #ef4444;
+            border-left: 4px solid #dc2626;
+            color: #991b1b;
+            padding: 20px 25px;
+            border-radius: 12px;
+            margin-top: 30px;
+            display: none;
+            font-weight: 500;
+        }
+
+        .error.show {
+            display: block;
+        }
+
+        /* How It Works Section */
+        .how-it-works {
             background: white;
-            color: #667eea;
-            padding: 12px 28px;
-            border-radius: 50px;
-            font-size: 1.05em;
-            font-weight: 600;
+            padding: 80px 40px;
+        }
+
+        .how-it-works-content {
+            max-width: 1280px;
+            margin: 0 auto;
+        }
+
+        .steps-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 40px;
+            margin-top: 50px;
+        }
+
+        .step-card {
+            text-align: center;
+            position: relative;
+        }
+
+        .step-number {
+            width: 60px;
+            height: 60px;
+            background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+            color: white;
+            border-radius: 50%;
             display: flex;
             align-items: center;
-            gap: 10px;
+            justify-content: center;
+            font-size: 1.5em;
+            font-weight: 700;
+            margin: 0 auto 25px;
+            box-shadow: 0 8px 20px rgba(99, 102, 241, 0.3);
         }
 
-        /* Upload Area */
-        .upload-area {
-            border: 3px dashed #cbd5e0;
-            border-radius: 20px;
-            padding: 70px 30px;
-            text-align: center;
-            transition: all 0.3s ease;
-            cursor: pointer;
-            margin-bottom: 25px;
-            background: linear-gradient(135deg, #f7fafc 0%, #edf2f7 100%);
-        }
-
-        .upload-area:hover {
-            border-color: #667eea;
-            background: #e6f2ff;
-        }
-
-        .upload-icon {
-            font-size: 5em;
-            margin-bottom: 20px;
-        }
-
-        .upload-text {
-            color: #2d3748;
-            font-size: 1.4em;
-            font-weight: 600;
+        .step-title {
+            font-size: 1.2em;
+            font-weight: 700;
+            color: #0f172a;
             margin-bottom: 12px;
         }
 
-        .upload-hint {
-            color: #718096;
-            font-size: 0.95em;
-            margin-top: 8px;
-        }
-
-        #fileInput {
-            display: none;
-        }
-
-        /* Button */
-        .btn {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-            border: none;
-            padding: 18px 50px;
-            border-radius: 50px;
-            font-size: 1.15em;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            box-shadow: 0 10px 30px rgba(102, 126, 234, 0.3);
-        }
-
-        .btn:hover {
-            transform: translateY(-3px);
-            box-shadow: 0 15px 40px rgba(102, 126, 234, 0.4);
-        }
-
-        .btn:disabled {
-            opacity: 0.5;
-            cursor: not-allowed;
+        .step-description {
+            color: #64748b;
+            line-height: 1.7;
         }
 
         /* Footer */
         .footer {
-            background: rgba(45, 55, 72, 0.98);
+            background: #0f172a;
             color: white;
-            padding: 50px 20px 30px;
+            padding: 60px 40px 30px;
             margin-top: auto;
         }
 
         .footer-content {
-            max-width: 1200px;
+            max-width: 1280px;
             margin: 0 auto;
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-            gap: 40px;
-            margin-bottom: 30px;
+            grid-template-columns: 2fr 1fr 1fr 1fr;
+            gap: 50px;
+            margin-bottom: 40px;
         }
 
         .footer-section h3 {
+            font-size: 1.2em;
             margin-bottom: 20px;
-            font-size: 1.3em;
-            color: #667eea;
+            color: white;
         }
 
         .footer-section p {
-            color: #cbd5e0;
+            color: #94a3b8;
             line-height: 1.8;
-            margin-bottom: 15px;
+            margin-bottom: 20px;
         }
 
         .footer-links {
@@ -417,160 +759,161 @@
         }
 
         .footer-links a {
-            color: #cbd5e0;
+            color: #94a3b8;
             text-decoration: none;
             transition: color 0.3s ease;
+            font-size: 0.95em;
         }
 
         .footer-links a:hover {
-            color: #667eea;
+            color: #6366f1;
         }
 
         .social-links {
             display: flex;
-            gap: 15px;
-            margin-top: 15px;
+            gap: 12px;
+            margin-top: 20px;
         }
 
         .social-link {
-            width: 40px;
-            height: 40px;
-            background: rgba(102, 126, 234, 0.2);
-            border-radius: 50%;
+            width: 45px;
+            height: 45px;
+            background: rgba(99, 102, 241, 0.2);
+            border-radius: 10px;
             display: flex;
             align-items: center;
             justify-content: center;
             color: white;
             text-decoration: none;
             transition: all 0.3s ease;
+            font-size: 1.3em;
         }
 
         .social-link:hover {
-            background: #667eea;
+            background: #6366f1;
             transform: translateY(-3px);
         }
 
         .footer-bottom {
-            text-align: center;
-            padding-top: 30px;
             border-top: 1px solid rgba(255, 255, 255, 0.1);
-            color: #a0aec0;
-        }
-
-        .selected-file {
-            background: #e6f2ff;
-            padding: 20px;
-            border-radius: 14px;
-            margin-top: 20px;
-            display: none;
-        }
-
-        .selected-file.show {
-            display: block;
-        }
-
-        .file-name {
-            font-weight: 600;
-            color: #2d3748;
-        }
-
-        .loading {
-            display: none;
+            padding-top: 30px;
             text-align: center;
-            margin-top: 30px;
+            color: #94a3b8;
         }
 
-        .loading.show {
-            display: block;
-        }
-
-        .spinner {
-            border: 5px solid #f3f3f3;
-            border-top: 5px solid #667eea;
-            border-radius: 50%;
-            width: 60px;
-            height: 60px;
-            animation: spin 1s linear infinite;
-            margin: 0 auto 20px;
-        }
-
-        @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
-        }
-
-        .result {
+        /* Mobile Menu */
+        .mobile-menu-btn {
             display: none;
-            margin-top: 40px;
+            flex-direction: column;
+            gap: 5px;
+            cursor: pointer;
+            padding: 8px;
         }
 
-        .result.show {
-            display: block;
-        }
-
-        .result-header {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-            padding: 25px;
-            border-radius: 18px 18px 0 0;
-            text-align: center;
-        }
-
-        .result-body {
-            border: 3px solid #667eea;
-            border-top: none;
-            padding: 30px;
-            border-radius: 0 0 18px 18px;
-        }
-
-        .result-image, .result-video {
-            max-width: 100%;
-            border-radius: 14px;
-            margin-bottom: 25px;
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
-        }
-
-        .error {
-            background: #fed7d7;
-            color: #742a2a;
-            padding: 20px;
-            border-radius: 14px;
-            margin-top: 25px;
-            display: none;
-        }
-
-        .error.show {
-            display: block;
+        .mobile-menu-btn span {
+            width: 25px;
+            height: 3px;
+            background: #475569;
+            border-radius: 3px;
+            transition: all 0.3s ease;
         }
 
         /* Responsive */
+        @media (max-width: 1024px) {
+            .footer-content {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+
         @media (max-width: 768px) {
+            .header-content {
+                padding: 0 20px;
+            }
+
             .nav-menu {
                 position: fixed;
                 top: 80px;
                 left: -100%;
                 width: 100%;
+                height: calc(100vh - 80px);
                 background: white;
                 flex-direction: column;
-                padding: 30px;
+                padding: 40px;
                 transition: left 0.3s ease;
                 box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+                align-items: flex-start;
             }
 
             .nav-menu.active {
                 left: 0;
             }
 
-            .menu-toggle {
+            .mobile-menu-btn {
                 display: flex;
             }
 
-            .container {
-                padding: 30px 25px;
+            .hero-title {
+                font-size: 2.5em;
             }
 
-            h1 {
-                font-size: 2.2em;
+            .hero-description {
+                font-size: 1.1em;
+            }
+
+            .hero-stats {
+                flex-direction: column;
+                gap: 30px;
+            }
+
+            .main-content {
+                padding: 60px 20px;
+            }
+
+            .features-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .steps-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .poses-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .upload-section {
+                padding: 30px 20px;
+            }
+
+            .upload-area {
+                padding: 60px 20px;
+            }
+
+            .footer-content {
+                grid-template-columns: 1fr;
+                gap: 40px;
+            }
+
+            .section-title {
+                font-size: 2em;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .hero-title {
+                font-size: 2em;
+            }
+
+            .stat-number {
+                font-size: 2em;
+            }
+
+            .result-value {
+                font-size: 2em;
+            }
+
+            .status-text {
+                font-size: 1.5em;
             }
         }
     </style>
@@ -579,25 +922,26 @@
     <!-- Header -->
     <header class="header">
         <div class="header-content">
-            <div class="logo-section">
+            <a href="/" class="logo-section">
                 <div class="logo-icon">💃</div>
                 <div class="logo-text">
-                    <div class="logo-title">Zumba AI</div>
-                    <div class="logo-subtitle">Pose Analysis</div>
+                    <h2>Zumba AI</h2>
+                    <p>Pose Analysis</p>
                 </div>
-            </div>
+            </a>
             
             <nav class="nav-menu" id="navMenu">
-                <a href="/" class="nav-link">Home</a>
+                <a href="#home" class="nav-link">Home</a>
                 <a href="#features" class="nav-link">Features</a>
-                <a href="#about" class="nav-link">About</a>
+                <a href="#how-it-works" class="nav-link">How It Works</a>
+                <a href="#poses" class="nav-link">Poses</a>
                 <div class="auth-buttons">
                     <a href="/login" class="btn-login">Login</a>
-                    <a href="/register" class="btn-register">Sign Up</a>
+                    <a href="/register" class="btn-register">Get Started</a>
                 </div>
             </nav>
 
-            <div class="menu-toggle" id="menuToggle">
+            <div class="mobile-menu-btn" id="menuToggle">
                 <span></span>
                 <span></span>
                 <span></span>
@@ -605,64 +949,155 @@
         </div>
     </header>
 
-    <!-- Main Content -->
-    <div class="main-content">
-        <div class="container">
-            <div class="page-header">
-                <div class="page-logo-container">
-                    <div class="page-logo">💃</div>
+    <!-- Hero Section -->
+    <section class="hero-section" id="home">
+        <div class="hero-content">
+            <div class="hero-badge">✨ AI-Powered Technology</div>
+            <h1 class="hero-title">
+                Perfect Your <span class="hero-gradient-text">Zumba Moves</span><br>
+                with AI Analysis
+            </h1>
+            <p class="hero-description">
+                Get instant, intelligent feedback on your Zumba poses. Our advanced AI analyzes your movements and provides real-time correctness evaluation to help you improve your form.
+            </p>
+            
+            <div class="hero-stats">
+                <div class="stat-item">
+                    <div class="stat-number">94%</div>
+                    <div class="stat-label">Accuracy Rate</div>
                 </div>
-                <h1>AI-Powered Analysis</h1>
-                <p class="subtitle">Perfect your Zumba moves with intelligent feedback</p>
-            </div>
-
-            <div class="features">
-                <div class="feature-card">
-                    <div class="feature-icon">🎯</div>
-                    <div class="feature-title">Accurate Detection</div>
-                    <div class="feature-desc">94-96% accuracy</div>
+                <div class="stat-item">
+                    <div class="stat-number">&lt;3s</div>
+                    <div class="stat-label">Analysis Time</div>
                 </div>
-                <div class="feature-card">
-                    <div class="feature-icon">⚡</div>
-                    <div class="feature-title">Instant Results</div>
-                    <div class="feature-desc">Get feedback in seconds</div>
-                </div>
-                <div class="feature-card">
-                    <div class="feature-icon">✨</div>
-                    <div class="feature-title">Smart Analysis</div>
-                    <div class="feature-desc">AI-powered evaluation</div>
+                <div class="stat-item">
+                    <div class="stat-number">2</div>
+                    <div class="stat-label">Poses Detected</div>
                 </div>
             </div>
+        </div>
+    </section>
 
-            <div class="poses-section">
-                <div class="poses-title">✨ Supported Poses</div>
-                <div class="pose-badges">
-                    <div class="pose-badge">💪 Arm Raise</div>
-                    <div class="pose-badge">🏋️ Squats</div>
-                </div>
+    <!-- Features Section -->
+    <section class="main-content" id="features">
+        <div class="section-header">
+            <h2 class="section-title">Why Choose Zumba AI?</h2>
+            <p class="section-description">
+                Powered by cutting-edge artificial intelligence and computer vision technology
+            </p>
+        </div>
+
+        <div class="features-grid">
+            <div class="feature-card">
+                <div class="feature-icon">🎯</div>
+                <h3 class="feature-title">High Accuracy</h3>
+                <p class="feature-description">
+                    Our AI model achieves 94-96% accuracy using EfficientNetB0 deep learning architecture combined with MediaPipe pose detection for precise analysis.
+                </p>
             </div>
 
+            <div class="feature-card">
+                <div class="feature-icon">⚡</div>
+                <h3 class="feature-title">Lightning Fast</h3>
+                <p class="feature-description">
+                    Get instant results in seconds. Upload your video or image and receive immediate feedback on your pose correctness and form quality.
+                </p>
+            </div>
+
+            <div class="feature-card">
+                <div class="feature-icon">✨</div>
+                <h3 class="feature-title">Smart Analysis</h3>
+                <p class="feature-description">
+                    Hybrid AI system combines neural network predictions with rule-based validation to ensure the most accurate and reliable pose evaluation.
+                </p>
+            </div>
+
+            <div class="feature-card">
+                <div class="feature-icon">📊</div>
+                <h3 class="feature-title">Simple Results</h3>
+                <p class="feature-description">
+                    No complex metrics or confusing data. Get clear, actionable feedback with only 4 possible outcomes: pose type and correctness status.
+                </p>
+            </div>
+
+            <div class="feature-card">
+                <div class="feature-icon">🎥</div>
+                <h3 class="feature-title">Video Support</h3>
+                <p class="feature-description">
+                    Analyze entire workout videos. Our system processes every frame to determine your dominant pose and overall form quality.
+                </p>
+            </div>
+
+            <div class="feature-card">
+                <div class="feature-icon">📱</div>
+                <h3 class="feature-title">Fully Responsive</h3>
+                <p class="feature-description">
+                    Works seamlessly on desktop, tablet, and mobile devices. Analyze your poses anywhere, anytime with our responsive web interface.
+                </p>
+            </div>
+        </div>
+
+        <!-- Poses Section -->
+        <div class="poses-container" id="poses">
+            <div class="poses-header">
+                <h3>🎯 Supported Zumba Poses</h3>
+                <p>Two core movements analyzed with precision</p>
+            </div>
+            
+            <div class="poses-grid">
+                <div class="pose-card">
+                    <div class="pose-emoji">💪</div>
+                    <h4 class="pose-name">Arm Raise</h4>
+                    <p class="pose-details">
+                        Validates proper arm extension, elbow position above shoulders, and symmetrical arm raising for correct Zumba form.
+                    </p>
+                </div>
+                
+                <div class="pose-card">
+                    <div class="pose-emoji">🏋️</div>
+                    <h4 class="pose-name">Squats</h4>
+                    <p class="pose-details">
+                        Analyzes knee bend angle (50-140°), hip positioning, proper squat depth, and overall lower body alignment for optimal form.
+                    </p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Upload Section -->
+        <div class="upload-section">
             <div class="upload-area" id="uploadArea">
                 <div class="upload-icon">📤</div>
-                <div class="upload-text">Drop your video or image here</div>
-                <div class="upload-hint">or click to browse</div>
-                <div class="upload-hint" style="margin-top: 15px;">📷 JPG, PNG • 🎥 MP4, AVI, MOV • Max 200MB</div>
+                <h3 class="upload-title">Upload Your Video or Image</h3>
+                <p class="upload-subtitle">Drag and drop or click to browse your files</p>
+                
+                <div class="upload-formats">
+                    <span class="format-badge">📷 JPG / PNG</span>
+                    <span class="format-badge">🎥 MP4 / AVI / MOV</span>
+                    <span class="format-badge">📦 Max 200MB</span>
+                </div>
             </div>
 
             <input type="file" id="fileInput" accept="image/png,image/jpeg,video/mp4,video/avi,video/quicktime">
 
             <div class="selected-file" id="selectedFile">
-                <div class="file-name" id="fileName"></div>
-                <div class="file-size" id="fileSize"></div>
+                <div class="file-icon-large">📄</div>
+                <div class="file-details">
+                    <h4 id="fileName"></h4>
+                    <p id="fileSize"></p>
+                </div>
             </div>
 
-            <div style="text-align: center;">
-                <button class="btn" id="uploadBtn" disabled>🚀 Analyze My Pose</button>
+            <div class="btn-container">
+                <button class="btn-primary" id="uploadBtn" disabled>
+                    <span>🚀</span>
+                    <span>Analyze My Pose</span>
+                </button>
             </div>
 
             <div class="loading" id="loading">
                 <div class="spinner"></div>
-                <div>✨ Analyzing... Please wait</div>
+                <div class="loading-text">✨ Analyzing your pose...</div>
+                <p style="color: #64748b; margin-top: 15px;">This may take a few moments</p>
             </div>
 
             <div class="error" id="error"></div>
@@ -673,20 +1108,71 @@
                 </div>
                 <div class="result-body">
                     <div id="resultContent"></div>
-                    <div style="text-align: center; margin-top: 20px;">
-                        <button class="btn" onclick="location.reload()">🔄 Analyze Another</button>
+                    <div class="btn-container">
+                        <button class="btn-primary" onclick="location.reload()">
+                            <span>🔄</span>
+                            <span>Analyze Another</span>
+                        </button>
                     </div>
                 </div>
             </div>
         </div>
-    </div>
+    </section>
+
+    <!-- How It Works -->
+    <section class="how-it-works" id="how-it-works">
+        <div class="how-it-works-content">
+            <div class="section-header">
+                <h2 class="section-title">How It Works</h2>
+                <p class="section-description">
+                    Three simple steps to get professional pose analysis
+                </p>
+            </div>
+
+            <div class="steps-grid">
+                <div class="step-card">
+                    <div class="step-number">1</div>
+                    <h4 class="step-title">Upload Content</h4>
+                    <p class="step-description">
+                        Upload your Zumba video or image. We support all major formats including MP4, AVI, MOV, JPG, and PNG.
+                    </p>
+                </div>
+
+                <div class="step-card">
+                    <div class="step-number">2</div>
+                    <h4 class="step-title">AI Analysis</h4>
+                    <p class="step-description">
+                        Our AI analyzes your pose using advanced computer vision, detecting landmarks and evaluating form correctness.
+                    </p>
+                </div>
+
+                <div class="step-card">
+                    <div class="step-number">3</div>
+                    <h4 class="step-title">Get Results</h4>
+                    <p class="step-description">
+                        Receive instant feedback showing detected pose and correctness status with clear visual annotations.
+                    </p>
+                </div>
+
+                <div class="step-card">
+                    <div class="step-number">4</div>
+                    <h4 class="step-title">Improve Form</h4>
+                    <p class="step-description">
+                        Use the feedback to perfect your technique and achieve better form in your Zumba workouts.
+                    </p>
+                </div>
+            </div>
+        </div>
+    </section>
 
     <!-- Footer -->
     <footer class="footer">
         <div class="footer-content">
             <div class="footer-section">
                 <h3>Zumba AI</h3>
-                <p>Advanced AI-powered pose analysis system for Zumba dancers. Get real-time feedback on your movements and improve your form.</p>
+                <p>
+                    Advanced AI-powered pose analysis system helping Zumba enthusiasts perfect their moves through intelligent, real-time feedback and computer vision technology.
+                </p>
                 <div class="social-links">
                     <a href="#" class="social-link">📘</a>
                     <a href="#" class="social-link">🐦</a>
@@ -696,13 +1182,24 @@
             </div>
             
             <div class="footer-section">
-                <h3>Quick Links</h3>
+                <h3>Product</h3>
                 <ul class="footer-links">
-                    <li><a href="/">Home</a></li>
                     <li><a href="#features">Features</a></li>
-                    <li><a href="#about">About Us</a></li>
-                    <li><a href="/login">Login</a></li>
-                    <li><a href="/register">Sign Up</a></li>
+                    <li><a href="#poses">Poses</a></li>
+                    <li><a href="#how-it-works">How It Works</a></li>
+                    <li><a href="#">Pricing</a></li>
+                    <li><a href="#">API Access</a></li>
+                </ul>
+            </div>
+            
+            <div class="footer-section">
+                <h3>Company</h3>
+                <ul class="footer-links">
+                    <li><a href="#">About Us</a></li>
+                    <li><a href="#">Careers</a></li>
+                    <li><a href="#">Blog</a></li>
+                    <li><a href="#">Press Kit</a></li>
+                    <li><a href="#">Contact</a></li>
                 </ul>
             </div>
             
@@ -711,22 +1208,15 @@
                 <ul class="footer-links">
                     <li><a href="#">Help Center</a></li>
                     <li><a href="#">Documentation</a></li>
-                    <li><a href="#">API Reference</a></li>
-                    <li><a href="#">Contact Us</a></li>
                     <li><a href="#">Privacy Policy</a></li>
+                    <li><a href="#">Terms of Service</a></li>
+                    <li><a href="#">Contact Support</a></li>
                 </ul>
-            </div>
-            
-            <div class="footer-section">
-                <h3>Contact</h3>
-                <p>📧 info@zumbaai.com</p>
-                <p>📱 +1 (555) 123-4567</p>
-                <p>📍 Silicon Valley, CA</p>
             </div>
         </div>
         
         <div class="footer-bottom">
-            <p>&copy; 2024 Zumba AI. All rights reserved. Powered by AI Technology.</p>
+            <p>&copy; 2024 Zumba AI. All rights reserved. Powered by TensorFlow & MediaPipe.</p>
         </div>
     </footer>
 
@@ -739,7 +1229,19 @@
             navMenu.classList.toggle('active');
         });
 
-        // File upload logic
+        // Smooth scroll
+        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+            anchor.addEventListener('click', function (e) {
+                e.preventDefault();
+                const target = document.querySelector(this.getAttribute('href'));
+                if (target) {
+                    target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                    navMenu.classList.remove('active');
+                }
+            });
+        });
+
+        // File upload
         const uploadArea = document.getElementById('uploadArea');
         const fileInput = document.getElementById('fileInput');
         const uploadBtn = document.getElementById('uploadBtn');
@@ -757,16 +1259,16 @@
 
         uploadArea.addEventListener('dragover', (e) => {
             e.preventDefault();
-            uploadArea.style.borderColor = '#667eea';
+            uploadArea.classList.add('dragover');
         });
 
         uploadArea.addEventListener('dragleave', () => {
-            uploadArea.style.borderColor = '#cbd5e0';
+            uploadArea.classList.remove('dragover');
         });
 
         uploadArea.addEventListener('drop', (e) => {
             e.preventDefault();
-            uploadArea.style.borderColor = '#cbd5e0';
+            uploadArea.classList.remove('dragover');
             const files = e.dataTransfer.files;
             if (files.length > 0) {
                 handleFileSelect(files[0]);
@@ -782,9 +1284,12 @@
         function handleFileSelect(file) {
             selectedFileObj = file;
             fileName.textContent = file.name;
-            fileSize.textContent = `Size: ${(file.size / 1024 / 1024).toFixed(2)} MB`;
+            fileSize.textContent = `${(file.size / 1024 / 1024).toFixed(2)} MB`;
             selectedFile.classList.add('show');
             uploadBtn.disabled = false;
+            
+            // Scroll to button
+            uploadBtn.scrollIntoView({ behavior: 'smooth', block: 'center' });
         }
 
         uploadBtn.addEventListener('click', async () => {
@@ -809,7 +1314,7 @@
                 if (data.success) {
                     displayResult(data);
                 } else {
-                    showError(data.error || 'An error occurred');
+                    showError(data.error || 'An error occurred during analysis');
                 }
             } catch (err) {
                 showError('Network error: ' + err.message);
@@ -822,29 +1327,38 @@
         function displayResult(data) {
             let html = '';
 
+            html += '<div class="result-media">';
             if (data.file_type === 'image') {
-                html += `<img src="${data.result_url}" class="result-image" alt="Result">`;
+                html += `<img src="${data.result_url}" class="result-image" alt="Analysis Result">`;
             } else {
                 html += `<video src="${data.result_url}" class="result-video" controls></video>`;
             }
+            html += '</div>';
 
-            html += '<div style="text-align: center; padding: 20px;">';
-            html += '<div style="margin-bottom: 10px; color: #718096;">Detected Pose</div>';
-            html += `<div style="font-size: 2em; font-weight: bold; color: #2d3748; margin-bottom: 20px;">${data.data.detected_pose}</div>`;
-            html += '<div style="margin-bottom: 10px; color: #718096;">Status</div>';
+            html += '<div class="result-info">';
+            html += '<div class="result-pose">';
+            html += '<div class="result-label">Detected Pose</div>';
+            html += `<div class="result-value">${data.data.detected_pose}</div>`;
+            html += '</div>';
             
-            const statusClass = data.data.status === 'Correct' ? '#38a169' : '#e53e3e';
+            const statusClass = data.data.status === 'Correct' ? 'correct' : 'incorrect';
             const statusIcon = data.data.status === 'Correct' ? '✅' : '❌';
-            html += `<div style="font-size: 2em; font-weight: bold; color: ${statusClass};">${statusIcon} ${data.data.status}</div>`;
+            
+            html += `<div class="result-status ${statusClass}">`;
+            html += `<div class="status-icon">${statusIcon}</div>`;
+            html += `<div class="status-text ${statusClass}">${data.data.status}</div>`;
+            html += '</div>';
             html += '</div>';
 
             resultContent.innerHTML = html;
             result.classList.add('show');
+            result.scrollIntoView({ behavior: 'smooth', block: 'start' });
         }
 
         function showError(message) {
             error.textContent = '⚠️ ' + message;
             error.classList.add('show');
+            error.scrollIntoView({ behavior: 'smooth', block: 'center' });
         }
     </script>
 </body>
