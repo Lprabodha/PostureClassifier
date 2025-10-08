@@ -381,6 +381,18 @@ def index():
     return render_template('index.html', classes=class_names)
 
 
+@app.route('/login')
+def login():
+    """Login page"""
+    return render_template('login.html')
+
+
+@app.route('/register')
+def register():
+    """Registration page"""
+    return render_template('register.html')
+
+
 @app.route('/predict', methods=['POST'])
 def predict():
     """Handle file upload and prediction"""

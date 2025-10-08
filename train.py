@@ -45,11 +45,8 @@ class PostureTrainer:
         if not os.path.exists(test_dir):
             raise FileNotFoundError(f"Test directory not found: {test_dir}")
         
-        # Only use Arm_Raise and Squats classes
-        allowed_classes = ['Arm_Raise', 'Squats']
-        
-        # Load with color mode explicitly set to RGB
-        self.train_ds = keras.utils.image_dataset_from_directory(
+        # Load all datasets first
+        train_ds_full = keras.utils.image_dataset_from_directory(
             train_dir,
             image_size=self.img_size,
             batch_size=self.batch_size,
@@ -57,12 +54,10 @@ class PostureTrainer:
             subset="training",
             seed=self.seed,
             color_mode='rgb',
-            interpolation='bilinear',
-            labels='inferred',
-            label_mode='int'
+            interpolation='bilinear'
         )
         
-        self.val_ds = keras.utils.image_dataset_from_directory(
+        val_ds_full = keras.utils.image_dataset_from_directory(
             train_dir,
             image_size=self.img_size,
             batch_size=self.batch_size,
@@ -70,38 +65,58 @@ class PostureTrainer:
             subset="validation",
             seed=self.seed,
             color_mode='rgb',
-            interpolation='bilinear',
-            labels='inferred',
-            label_mode='int'
+            interpolation='bilinear'
         )
         
-        self.test_ds = keras.utils.image_dataset_from_directory(
+        test_ds_full = keras.utils.image_dataset_from_directory(
             test_dir,
             image_size=self.img_size,
             batch_size=self.batch_size,
             shuffle=False,
             color_mode='rgb',
-            interpolation='bilinear',
-            labels='inferred',
-            label_mode='int'
+            interpolation='bilinear'
         )
         
-        self.class_names = self.train_ds.class_names
+        all_class_names = train_ds_full.class_names
+        print(f"All classes in dataset: {all_class_names}")
         
-        # Filter to only include Arm_Raise and Squats
-        filtered_class_names = [name for name in self.class_names if name in allowed_classes]
-        if len(filtered_class_names) != 2:
-            print(f"Warning: Found classes {self.class_names}, but only using {filtered_class_names}")
-        self.class_names = filtered_class_names
+        # Filter to only Arm_Raise and Squats
+        allowed_classes = ['Arm_Raise', 'Squats']
+        keep_indices = [i for i, name in enumerate(all_class_names) if name in allowed_classes]
         
-        print(f"Classes found: {self.class_names}")
+        # Create label remapping tensor
+        label_map_list = [-1] * len(all_class_names)  # -1 for classes to filter out
+        for new_idx, old_idx in enumerate(keep_indices):
+            label_map_list[old_idx] = new_idx
+        label_map_tensor = tf.constant(label_map_list, dtype=tf.int32)
+        
+        def remap_label(image, label):
+            # Get new label from mapping
+            new_label = tf.gather(label_map_tensor, label)
+            return image, new_label
+        
+        # Apply remapping, unbatch, filter out -1 labels, then rebatch
+        self.train_ds = train_ds_full.unbatch().map(remap_label).filter(
+            lambda x, y: tf.not_equal(y, -1)
+        ).batch(self.batch_size)
+        
+        self.val_ds = val_ds_full.unbatch().map(remap_label).filter(
+            lambda x, y: tf.not_equal(y, -1)
+        ).batch(self.batch_size)
+        
+        self.test_ds = test_ds_full.unbatch().map(remap_label).filter(
+            lambda x, y: tf.not_equal(y, -1)
+        ).batch(self.batch_size)
+        
+        self.class_names = [all_class_names[i] for i in keep_indices]
+        print(f"Using classes: {self.class_names}")
         
         # Print dataset statistics
         print(f"\nDataset Statistics:")
-        print(f"  Training batches: {len(self.train_ds)}")
-        print(f"  Validation batches: {len(self.val_ds)}")
-        print(f"  Test batches: {len(self.test_ds)}")
-        print(f"  Note: Only using Arm_Raise and Squats poses for Zumba analysis")
+        print(f"  Training batches: {tf.data.experimental.cardinality(self.train_ds).numpy()}")
+        print(f"  Validation batches: {tf.data.experimental.cardinality(self.val_ds).numpy()}")
+        print(f"  Test batches: {tf.data.experimental.cardinality(self.test_ds).numpy()}")
+        print(f"  Note: Filtered to only use Arm_Raise and Squats poses")
         
     def compute_class_weights(self):
         """Compute class weights for imbalanced data"""
