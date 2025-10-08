@@ -282,14 +282,13 @@
 <body>
     <div class="container">
         <h1>🏋️ Zumba AI</h1>
-        <p class="subtitle">AI-Powered Posture Classification</p>
+        <p class="subtitle">Zumba Pose Analysis & Correctness Detection</p>
 
         <div class="classes">
-            <h3>Supported Postures:</h3>
+            <h3>Detects:</h3>
             <div class="class-badges">
-                {% for class in classes %}
-                <span class="badge">{{ class }}</span>
-                {% endfor %}
+                <span class="badge">Arm Raise</span>
+                <span class="badge">Squats</span>
             </div>
         </div>
 
@@ -428,59 +427,26 @@
             if (data.file_type === 'image') {
                 html += `<img src="${data.result_url}" class="result-image" alt="Result">`;
                 html += '<div class="result-data">';
-                html += `<div class="result-item">
-                    <span class="result-label">Posture:</span>
-                    <span class="result-value"><strong>${data.data.posture}</strong></span>
-                </div>`;
-                html += `<div class="result-item">
-                    <span class="result-label">Confidence:</span>
-                    <span class="result-value">${(data.data.confidence * 100).toFixed(1)}%</span>
-                </div>`;
-                html += `<div class="result-item">
-                    <span class="result-label">Form:</span>
-                    <span class="result-value ${data.data.correct ? 'correct' : 'incorrect'}">
-                        ${data.data.correct ? '✅ Correct' : '❌ Needs Improvement'}
-                    </span>
-                </div>`;
-                html += `<div class="result-item">
-                    <span class="result-label">Method:</span>
-                    <span class="result-value">${data.data.method}</span>
+                html += `<div class="result-item" style="text-align: center; font-size: 1.3em; padding: 20px;">
+                    <div style="margin-bottom: 10px; color: #555;">Detected Pose:</div>
+                    <div style="font-size: 1.5em; font-weight: bold; color: #333;">${data.data.detected_pose}</div>
+                    <div style="margin-top: 15px; margin-bottom: 10px; color: #555;">Status:</div>
+                    <div class="${data.data.status === 'Correct' ? 'correct' : 'incorrect'}" style="font-size: 1.5em; font-weight: bold;">
+                        ${data.data.status === 'Correct' ? '✅ Correct' : '❌ Incorrect'}
+                    </div>
                 </div>`;
                 html += '</div>';
             } else {
                 html += `<video src="${data.result_url}" class="result-video" controls></video>`;
                 html += '<div class="result-data">';
-                html += `<div class="result-item">
-                    <span class="result-label">Total Frames:</span>
-                    <span class="result-value">${data.data.total_frames}</span>
+                html += `<div class="result-item" style="text-align: center; font-size: 1.3em; padding: 20px;">
+                    <div style="margin-bottom: 10px; color: #555;">Detected Pose:</div>
+                    <div style="font-size: 1.5em; font-weight: bold; color: #333;">${data.data.detected_pose}</div>
+                    <div style="margin-top: 15px; margin-bottom: 10px; color: #555;">Status:</div>
+                    <div class="${data.data.status === 'Correct' ? 'correct' : 'incorrect'}" style="font-size: 1.5em; font-weight: bold;">
+                        ${data.data.status === 'Correct' ? '✅ Correct' : '❌ Incorrect'}
+                    </div>
                 </div>`;
-                html += `<div class="result-item">
-                    <span class="result-label">Detections:</span>
-                    <span class="result-value">${data.data.detections}</span>
-                </div>`;
-                if (data.data.correct_count !== undefined) {
-                    html += `<div class="result-item">
-                        <span class="result-label">Correct Form:</span>
-                        <span class="result-value correct">${data.data.correct_count}</span>
-                    </div>`;
-                    html += `<div class="result-item">
-                        <span class="result-label">Needs Improvement:</span>
-                        <span class="result-value incorrect">${data.data.incorrect_count}</span>
-                    </div>`;
-                }
-                if (data.data.avg_confidence !== undefined) {
-                    html += `<div class="result-item">
-                        <span class="result-label">Average Confidence:</span>
-                        <span class="result-value">${(data.data.avg_confidence * 100).toFixed(1)}%</span>
-                    </div>`;
-                }
-                html += '<div class="result-item"><span class="result-label">Posture Counts:</span></div>';
-                for (const [posture, count] of Object.entries(data.data.posture_counts)) {
-                    html += `<div class="result-item" style="padding-left: 20px;">
-                        <span class="result-label">${posture}:</span>
-                        <span class="result-value">${count}</span>
-                    </div>`;
-                }
                 html += '</div>';
             }
 

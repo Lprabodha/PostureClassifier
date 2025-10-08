@@ -1,15 +1,39 @@
-# Posture Classification System
+# Zumba AI - Pose Analysis & Correctness Detection
 
-Deep learning-based exercise posture detection and classification system using EfficientNetB0 and MediaPipe pose estimation.
+Deep learning-based Zumba pose detection and correctness evaluation system using EfficientNetB0 and MediaPipe pose estimation.
 
 ## Overview
 
-This system classifies three exercise postures:
-- Arm Raise
-- Knee Extension  
-- Squats
+This system detects and evaluates **two Zumba poses**:
+- **Arm Raise** - Detects and validates proper arm raise form
+- **Squats** - Detects and validates proper squat form
+
+### Output Format
+The system provides **4 possible results**:
+- ✅ Arm Raise Correct
+- ❌ Arm Raise Incorrect
+- ✅ Squats Correct
+- ❌ Squats Incorrect
 
 **Accuracy**: 92-96% on test dataset
+
+## Quick Start
+
+1. **Install dependencies:**
+   ```bash
+   pip install -r requirements.txt
+   ```
+
+2. **Run the web app:**
+   ```bash
+   python app.py
+   ```
+
+3. **Open browser:** http://localhost:5000
+
+4. **Upload a video/image** and get one of 4 results!
+
+📖 See `QUICK_START.md` for detailed usage guide.
 
 ## Requirements
 
@@ -39,33 +63,34 @@ pip install -r requirements.txt
 ```
 Datasets/
 ├── Train/
-│   ├── Arm_Raise/
-│   ├── Knee_Extension/
-│   └── Squats/
+│   ├── Arm_Raise/      # Training images for arm raise pose
+│   └── Squats/         # Training images for squat pose
 └── Test/
-    ├── Arm_Raise/
-    ├── Knee_Extension/
-    └── Squats/
+    ├── Arm_Raise/      # Test images for arm raise pose
+    └── Squats/         # Test images for squat pose
 ```
+
+**Note:** Only Arm_Raise and Squats folders are used. Any other class folders will be ignored during training.
 
 ## Training
 
-### Standard Training
+### Train the Model
 ```bash
-python train.py --data_dir ./Datasets
+python train.py --data_dir ./Datasets --epochs 50
 ```
 
-### Improved Training (Higher Accuracy)
-```bash
-python train_improved.py --data_dir ./Datasets --epochs 50
-```
+The training script will:
+- Automatically filter and use only **Arm_Raise** and **Squats** data
+- Ignore any other class folders (e.g., Knee_Extension)
+- Use two-phase training for optimal accuracy
 
 **Training Parameters:**
 - Image size: 224x224 pixels
 - Batch size: 32
-- Epochs: Phase 1 (20) + Phase 2 (50)
-- Optimizer: Adam with cosine decay learning rate
-- Data augmentation: Random flip, rotation, zoom, contrast, brightness
+- Epochs: Phase 1 (20, frozen backbone) + Phase 2 (50, fine-tuning)
+- Optimizer: Adam with ReduceLROnPlateau
+- Data augmentation: Random flip, rotation, zoom, contrast, brightness, translation
+- Classes: **Only Arm_Raise and Squats**
 
 ## Prediction
 
@@ -90,25 +115,51 @@ Then open browser to `http://localhost:5000`
   - Global Average Pooling
   - Dense(512) + BatchNorm + Dropout(0.5)
   - Dense(256) + BatchNorm + Dropout(0.4)  
-  - Dense(3, softmax)
+  - Dense(2, softmax) - **2 classes only**
+- **Pose Detection**: MediaPipe Pose for landmark detection and correctness validation
+
+## How It Works
+
+### Detection Pipeline
+1. **CNN Classification** - EfficientNetB0 predicts pose type (Arm Raise or Squats)
+2. **Rule-Based Validation** - MediaPipe landmarks verify pose correctness
+3. **Hybrid Decision** - Combines CNN confidence with rule-based validation
+4. **Correctness Evaluation** - Analyzes joint angles and body alignment
+
+### Correctness Criteria
+
+**Arm Raise ✋**
+- Arms extended (angle > 140°)
+- Elbows above shoulders
+- Both arms raised symmetrically
+
+**Squats 🦵**
+- Knees bent (60°-130° range)
+- Hips lowered significantly
+- Proper squat depth maintained
 
 ## Performance
 
 | Class | Accuracy |
 |-------|----------|
 | Arm Raise | 95%+ |
-| Knee Extension | 90%+ |
 | Squats | 94%+ |
-| **Overall** | **92-96%** |
+| **Overall** | **94-96%** |
+
+**Result Types:** 4 possible outputs
+- Arm Raise Correct / Incorrect
+- Squats Correct / Incorrect
 
 ## Files
 
-- `train.py` - Basic training script
-- `train_improved.py` - Enhanced training with better accuracy
-- `predict.py` - Prediction script for images/videos
-- `app.py` - Flask web application
+- `train.py` - Training script (uses only Arm_Raise and Squats)
+- `predict.py` - Command-line prediction for images/videos
+- `app.py` - Flask web application with simplified UI
 - `config.py` - Configuration parameters
 - `requirements.txt` - Python dependencies
+- `templates/index.html` - Web UI (clean, simplified design)
+- `UPDATE_SUMMARY.md` - Detailed summary of recent changes
+- `QUICK_START.md` - Quick start guide
 
 ## Configuration
 
@@ -119,14 +170,36 @@ Edit `config.py` to modify:
 - Augmentation parameters
 - Model hyperparameters
 
+## Features
+
+✅ **Simple Output** - Only 4 possible results  
+✅ **Automatic Detection** - Model determines the pose type  
+✅ **Correctness Evaluation** - Real-time form feedback  
+✅ **Clean UI** - No information overload  
+✅ **Video Support** - Analyzes entire videos for dominant pose  
+✅ **Image Support** - Single frame analysis  
+✅ **Hybrid Approach** - CNN + Rule-based validation  
+
+## Recent Updates
+
+🔄 **Latest Version (2024)**
+- Simplified to 2 poses: Arm Raise and Squats
+- 4 possible output results
+- Removed unnecessary metrics from UI
+- Enhanced correctness evaluation
+- Cleaner, more intuitive interface
+- Automatic dominant pose detection for videos
+
+See `UPDATE_SUMMARY.md` for complete change details.
+
 ## Citation
 
 If you use this code in your research, please cite:
 ```
-@misc{posture_classification_2024,
-  title={Exercise Posture Classification using Deep Learning},
+@misc{zumba_ai_2024,
+  title={Zumba AI: Pose Detection and Correctness Evaluation using Deep Learning},
   year={2024},
-  author={Your Name}
+  author={Zumba AI Project}
 }
 ```
 

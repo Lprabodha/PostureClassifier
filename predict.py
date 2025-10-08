@@ -14,7 +14,7 @@ import os
 class PosturePredictor:
     def __init__(self, model_path, class_names_path=None):
         """
-        Initialize posture predictor
+        Initialize posture predictor for Zumba poses
         
         Args:
             model_path: Path to trained .keras model
@@ -24,10 +24,12 @@ class PosturePredictor:
         self.model = tf.keras.models.load_model(model_path)
         print(f"✅ Model loaded from: {model_path}")
         
-        # Load class names
+        # Load class names - only Arm_Raise and Squats
         if class_names_path and os.path.exists(class_names_path):
             with open(class_names_path, 'r') as f:
-                self.class_names = [line.strip() for line in f.readlines()]
+                all_classes = [line.strip() for line in f.readlines()]
+                # Filter to only include Arm_Raise and Squats
+                self.class_names = [c for c in all_classes if c in ['Arm_Raise', 'Squats']]
         else:
             # Default class names
             self.class_names = ['Arm_Raise', 'Squats']
@@ -70,8 +72,8 @@ class PosturePredictor:
         return angle
     
     def detect_posture_rule_based(self, landmarks):
-        """Detect posture using rule-based approach with landmarks"""
-        # Arm Raise: both arms mostly straight
+        """Detect Zumba poses: Arm Raise and Squats only"""
+        # Arm Raise: both arms mostly straight and raised
         left_arm = self.get_angle(
             landmarks[self.mp_pose.PoseLandmark.LEFT_SHOULDER.value],
             landmarks[self.mp_pose.PoseLandmark.LEFT_ELBOW.value],
@@ -82,7 +84,14 @@ class PosturePredictor:
             landmarks[self.mp_pose.PoseLandmark.RIGHT_ELBOW.value],
             landmarks[self.mp_pose.PoseLandmark.RIGHT_WRIST.value]
         )
-        if left_arm > 140 and right_arm > 140:
+        
+        left_elbow_y = landmarks[self.mp_pose.PoseLandmark.LEFT_ELBOW.value].y
+        right_elbow_y = landmarks[self.mp_pose.PoseLandmark.RIGHT_ELBOW.value].y
+        left_shoulder_y = landmarks[self.mp_pose.PoseLandmark.LEFT_SHOULDER.value].y
+        right_shoulder_y = landmarks[self.mp_pose.PoseLandmark.RIGHT_SHOULDER.value].y
+        
+        if (left_arm > 140 and right_arm > 140 and 
+            left_elbow_y < left_shoulder_y and right_elbow_y < right_shoulder_y):
             return "Arm_Raise"
         
         # Squats: knees bent
@@ -101,13 +110,13 @@ class PosturePredictor:
         shoulder_y = (landmarks[self.mp_pose.PoseLandmark.LEFT_SHOULDER.value].y +
                       landmarks[self.mp_pose.PoseLandmark.RIGHT_SHOULDER.value].y) / 2
         
-        if 60 < left_knee < 130 and 60 < right_knee < 130 and hip_y > shoulder_y - 0.05:
+        if 60 < left_knee < 130 and 60 < right_knee < 130 and hip_y > shoulder_y - 0.1:
             return "Squats"
         
         return None
     
     def check_posture_correctness(self, posture, landmarks):
-        """Check if the detected posture is performed correctly"""
+        """Check if the Zumba pose is performed correctly"""
         if posture == "Arm_Raise":
             left_arm = self.get_angle(
                 landmarks[self.mp_pose.PoseLandmark.LEFT_SHOULDER.value],
@@ -119,7 +128,16 @@ class PosturePredictor:
                 landmarks[self.mp_pose.PoseLandmark.RIGHT_ELBOW.value],
                 landmarks[self.mp_pose.PoseLandmark.RIGHT_WRIST.value]
             )
-            return left_arm > 140 and right_arm > 140
+            
+            left_elbow_y = landmarks[self.mp_pose.PoseLandmark.LEFT_ELBOW.value].y
+            right_elbow_y = landmarks[self.mp_pose.PoseLandmark.RIGHT_ELBOW.value].y
+            left_shoulder_y = landmarks[self.mp_pose.PoseLandmark.LEFT_SHOULDER.value].y
+            right_shoulder_y = landmarks[self.mp_pose.PoseLandmark.RIGHT_SHOULDER.value].y
+            
+            arms_extended = left_arm > 140 and right_arm > 140
+            arms_raised = left_elbow_y < left_shoulder_y and right_elbow_y < right_shoulder_y
+            
+            return arms_extended and arms_raised
             
         elif posture == "Squats":
             left_knee = self.get_angle(
@@ -136,7 +154,11 @@ class PosturePredictor:
                      landmarks[self.mp_pose.PoseLandmark.RIGHT_HIP.value].y) / 2
             shoulder_y = (landmarks[self.mp_pose.PoseLandmark.LEFT_SHOULDER.value].y +
                           landmarks[self.mp_pose.PoseLandmark.RIGHT_SHOULDER.value].y) / 2
-            return 60 < left_knee < 130 and 60 < right_knee < 130 and hip_y > shoulder_y - 0.05
+            
+            knees_bent = 60 < left_knee < 130 and 60 < right_knee < 130
+            hip_lowered = hip_y > shoulder_y - 0.1
+            
+            return knees_bent and hip_lowered
             
         return False
     
@@ -214,12 +236,11 @@ class PosturePredictor:
                 correct = self.check_posture_correctness(posture, results.pose_landmarks.landmark) if posture else False
                 last_posture = posture
                 
-                # Display results
-                source = "CNN" if confidence > 0.65 else "Rule-based"
-                status = "✅ Correct" if correct else "❌ Incorrect"
-                posture_display = posture if posture else "Unknown"
+                # Display results with simplified format
+                status = "Correct" if correct else "Incorrect"
+                display_name = "Arm Raise" if posture == "Arm_Raise" else "Squats"
                 
-                print(f"Frame {frame_count}: {posture_display} {status} ({source}, conf={confidence:.2f})")
+                print(f"Frame {frame_count}: {display_name} - {status}")
                 
                 # Draw pose landmarks on frame
                 if show_video or save_output:
@@ -230,10 +251,11 @@ class PosturePredictor:
                         landmark_drawing_spec=self.mp_drawing_styles.get_default_pose_landmarks_style()
                     )
                     
-                    # Add text overlay
-                    text = f"{posture_display} {status} ({confidence:.2f})"
-                    cv2.putText(frame, text, (10, 30), cv2.FONT_HERSHEY_SIMPLEX, 
-                               1, (0, 255, 0) if correct else (0, 0, 255), 2)
+                    # Add simplified text overlay
+                    text = f"{display_name} - {status}"
+                    color = (0, 255, 0) if correct else (0, 0, 255)
+                    cv2.putText(frame, text, (10, 40), cv2.FONT_HERSHEY_SIMPLEX, 
+                               1.2, color, 3)
             
             # Show or save frame
             if show_video:
@@ -297,12 +319,11 @@ class PosturePredictor:
             # Check correctness
             correct = self.check_posture_correctness(posture, results.pose_landmarks.landmark) if posture else False
             
-            # Display results
-            source = "CNN" if confidence > 0.65 else "Rule-based"
-            status = "✅ Correct" if correct else "❌ Incorrect"
-            posture_display = posture if posture else "Unknown"
+            # Display results with simplified format
+            status = "Correct" if correct else "Incorrect"
+            display_name = "Arm Raise" if posture == "Arm_Raise" else "Squats"
             
-            print(f"Detected: {posture_display} {status} ({source}, conf={confidence:.2f})")
+            print(f"Detected Pose: {display_name} — Status: {status}")
             
             # Draw pose landmarks
             self.mp_drawing.draw_landmarks(
@@ -312,10 +333,11 @@ class PosturePredictor:
                 landmark_drawing_spec=self.mp_drawing_styles.get_default_pose_landmarks_style()
             )
             
-            # Add text overlay
-            text = f"{posture_display} {status} ({confidence:.2f})"
-            cv2.putText(frame, text, (10, 30), cv2.FONT_HERSHEY_SIMPLEX, 
-                       1, (0, 255, 0) if correct else (0, 0, 255), 2)
+            # Add simplified text overlay
+            text = f"{display_name} - {status}"
+            color = (0, 255, 0) if correct else (0, 0, 255)
+            cv2.putText(frame, text, (10, 50), cv2.FONT_HERSHEY_SIMPLEX, 
+                       1.3, color, 3)
             
             if show_result:
                 cv2.imshow('Posture Detection', frame)

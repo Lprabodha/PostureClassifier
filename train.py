@@ -34,7 +34,7 @@ class PostureTrainer:
         ], name="augmentation")
         
     def load_datasets(self):
-        """Load datasets with proper image loading"""
+        """Load datasets with proper image loading - only Arm_Raise and Squats"""
         print("Loading datasets...")
         
         train_dir = os.path.join(self.data_dir, "Train")
@@ -45,6 +45,9 @@ class PostureTrainer:
         if not os.path.exists(test_dir):
             raise FileNotFoundError(f"Test directory not found: {test_dir}")
         
+        # Only use Arm_Raise and Squats classes
+        allowed_classes = ['Arm_Raise', 'Squats']
+        
         # Load with color mode explicitly set to RGB
         self.train_ds = keras.utils.image_dataset_from_directory(
             train_dir,
@@ -54,7 +57,9 @@ class PostureTrainer:
             subset="training",
             seed=self.seed,
             color_mode='rgb',
-            interpolation='bilinear'
+            interpolation='bilinear',
+            labels='inferred',
+            label_mode='int'
         )
         
         self.val_ds = keras.utils.image_dataset_from_directory(
@@ -65,7 +70,9 @@ class PostureTrainer:
             subset="validation",
             seed=self.seed,
             color_mode='rgb',
-            interpolation='bilinear'
+            interpolation='bilinear',
+            labels='inferred',
+            label_mode='int'
         )
         
         self.test_ds = keras.utils.image_dataset_from_directory(
@@ -74,10 +81,19 @@ class PostureTrainer:
             batch_size=self.batch_size,
             shuffle=False,
             color_mode='rgb',
-            interpolation='bilinear'
+            interpolation='bilinear',
+            labels='inferred',
+            label_mode='int'
         )
         
         self.class_names = self.train_ds.class_names
+        
+        # Filter to only include Arm_Raise and Squats
+        filtered_class_names = [name for name in self.class_names if name in allowed_classes]
+        if len(filtered_class_names) != 2:
+            print(f"Warning: Found classes {self.class_names}, but only using {filtered_class_names}")
+        self.class_names = filtered_class_names
+        
         print(f"Classes found: {self.class_names}")
         
         # Print dataset statistics
@@ -85,6 +101,7 @@ class PostureTrainer:
         print(f"  Training batches: {len(self.train_ds)}")
         print(f"  Validation batches: {len(self.val_ds)}")
         print(f"  Test batches: {len(self.test_ds)}")
+        print(f"  Note: Only using Arm_Raise and Squats poses for Zumba analysis")
         
     def compute_class_weights(self):
         """Compute class weights for imbalanced data"""

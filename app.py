@@ -65,19 +65,15 @@ def load_model_and_classes():
     print(f"Loading model: {model_path}")
     model = tf.keras.models.load_model(model_path)
     
-    # Load class names
+    # Load class names - only Arm_Raise and Squats for Zumba analysis
     class_names_path = os.path.join(models_dir, 'class_names.txt')
     if os.path.exists(class_names_path):
         with open(class_names_path, 'r') as f:
-            class_names = [line.strip() for line in f.readlines()]
+            all_classes = [line.strip() for line in f.readlines()]
+            # Filter to only include Arm_Raise and Squats
+            class_names = [c for c in all_classes if c in ['Arm_Raise', 'Squats']]
     else:
-        # Auto-detect from dataset
-        train_dir = 'Datasets/Train'
-        if os.path.exists(train_dir):
-            class_names = sorted([d for d in os.listdir(train_dir) 
-                                if os.path.isdir(os.path.join(train_dir, d))])
-        else:
-            class_names = ['Arm_Raise', 'Knee_Extension', 'Squats']
+        class_names = ['Arm_Raise', 'Squats']
     
     print(f"Classes: {class_names}")
     
@@ -114,7 +110,7 @@ def get_angle(a, b, c):
 
 
 def detect_posture_rule_based(landmarks):
-    """Enhanced rule-based posture detection with better accuracy"""
+    """Zumba pose detection - only Arm Raise and Squats"""
     # Get all relevant angles
     left_arm = get_angle(
         landmarks[mp_pose.PoseLandmark.LEFT_SHOULDER.value],
@@ -149,13 +145,6 @@ def detect_posture_rule_based(landmarks):
         left_elbow_y < left_shoulder_y and right_elbow_y < right_shoulder_y):
         return "Arm_Raise"
     
-    # Knee Extension: one or both knees nearly straight while standing
-    if left_knee > 160 or right_knee > 160:
-        left_hip_y = landmarks[mp_pose.PoseLandmark.LEFT_HIP.value].y
-        left_knee_y = landmarks[mp_pose.PoseLandmark.LEFT_KNEE.value].y
-        if left_hip_y < left_knee_y:  # Hip above knee (standing position)
-            return "Knee_Extension"
-    
     # Squats: both knees bent in squat range
     if 60 < left_knee < 130 and 60 < right_knee < 130:
         hip_y = (landmarks[mp_pose.PoseLandmark.LEFT_HIP.value].y +
@@ -169,7 +158,7 @@ def detect_posture_rule_based(landmarks):
 
 
 def check_posture_correctness(posture, landmarks):
-    """Enhanced correctness checking with detailed validation"""
+    """Check correctness for Zumba poses: Arm Raise and Squats"""
     if posture == "Arm_Raise":
         left_arm = get_angle(
             landmarks[mp_pose.PoseLandmark.LEFT_SHOULDER.value],
@@ -213,26 +202,12 @@ def check_posture_correctness(posture, landmarks):
         hip_lowered = hip_y > shoulder_y - 0.1
         
         return knees_bent and hip_lowered
-        
-    elif posture == "Knee_Extension":
-        left_knee = get_angle(
-            landmarks[mp_pose.PoseLandmark.LEFT_HIP.value],
-            landmarks[mp_pose.PoseLandmark.LEFT_KNEE.value],
-            landmarks[mp_pose.PoseLandmark.LEFT_ANKLE.value]
-        )
-        right_knee = get_angle(
-            landmarks[mp_pose.PoseLandmark.RIGHT_HIP.value],
-            landmarks[mp_pose.PoseLandmark.RIGHT_KNEE.value],
-            landmarks[mp_pose.PoseLandmark.RIGHT_ANKLE.value]
-        )
-        
-        return left_knee > 160 or right_knee > 160
     
     return False
 
 
 def process_image(image_path):
-    """Process a single image"""
+    """Process a single image and return simplified result"""
     frame = cv2.imread(image_path)
     
     if frame is None:
@@ -270,36 +245,34 @@ def process_image(image_path):
             landmark_drawing_spec=mp_drawing_styles.get_default_pose_landmarks_style()
         )
         
-        # Add text with better formatting
+        # Add simplified text
         status = "Correct" if correct else "Incorrect"
         color = (0, 255, 0) if correct else (0, 0, 255)
+        display_name = "Arm Raise" if posture == "Arm_Raise" else "Squats"
         
         # Main label
-        text1 = f"{posture}"
-        text2 = f"{status} ({confidence*100:.1f}%)"
+        text = f"{display_name} - {status}"
         
-        cv2.putText(frame, text1, (10, 40), cv2.FONT_HERSHEY_SIMPLEX, 
-                   1.2, color, 3)
-        cv2.putText(frame, text2, (10, 80), cv2.FONT_HERSHEY_SIMPLEX, 
-                   0.8, color, 2)
+        cv2.putText(frame, text, (10, 50), cv2.FONT_HERSHEY_SIMPLEX, 
+                   1.3, color, 3)
         
         # Save result
         result_filename = f"result_{uuid.uuid4().hex[:8]}.jpg"
         result_path = os.path.join(app.config['RESULTS_FOLDER'], result_filename)
         cv2.imwrite(result_path, frame)
         
+        # Return simplified result
         return result_filename, {
-            'posture': posture,
-            'confidence': confidence,
-            'correct': correct,
-            'method': 'CNN' if confidence > CONFIDENCE_THRESHOLD else 'Rule-based'
+            'detected_pose': display_name,
+            'status': status,
+            'result': f"{display_name} {status}"
         }
     else:
         return None, "Error: No human detected in image"
 
 
 def process_video(video_path):
-    """Process a video file"""
+    """Process a video file and determine dominant pose with correctness"""
     cap = cv2.VideoCapture(video_path)
     
     if not cap.isOpened():
@@ -317,7 +290,8 @@ def process_video(video_path):
     out = cv2.VideoWriter(result_path, fourcc, fps, (width, height))
     
     frame_count = 0
-    detections = []
+    pose_detections = {'Arm_Raise': 0, 'Squats': 0}
+    correctness_data = {'Arm_Raise': [], 'Squats': []}
     last_prediction = None
     
     while True:
@@ -348,49 +322,55 @@ def process_video(video_path):
                 else:
                     posture = predicted_class if last_prediction is None else last_prediction
                 
-                correct = check_posture_correctness(posture, results.pose_landmarks.landmark)
-                last_prediction = posture
-                
-                # Draw landmarks
-                mp_drawing.draw_landmarks(
-                    frame,
-                    results.pose_landmarks,
-                    mp_pose.POSE_CONNECTIONS,
-                    landmark_drawing_spec=mp_drawing_styles.get_default_pose_landmarks_style()
-                )
-                
-                # Add text with better formatting
-                status = "OK" if correct else "FIX"
-                color = (0, 255, 0) if correct else (0, 0, 255)
-                text = f"{posture} {status} ({confidence*100:.0f}%)"
-                cv2.putText(frame, text, (10, 40), cv2.FONT_HERSHEY_SIMPLEX, 
-                           1, color, 2)
-                
-                detections.append({
-                    'frame': frame_count,
-                    'posture': posture,
-                    'confidence': confidence,
-                    'correct': correct
-                })
+                if posture in pose_detections:
+                    pose_detections[posture] += 1
+                    correct = check_posture_correctness(posture, results.pose_landmarks.landmark)
+                    correctness_data[posture].append(correct)
+                    last_prediction = posture
+                    
+                    # Draw landmarks
+                    mp_drawing.draw_landmarks(
+                        frame,
+                        results.pose_landmarks,
+                        mp_pose.POSE_CONNECTIONS,
+                        landmark_drawing_spec=mp_drawing_styles.get_default_pose_landmarks_style()
+                    )
+                    
+                    # Add simplified text
+                    status = "Correct" if correct else "Incorrect"
+                    color = (0, 255, 0) if correct else (0, 0, 255)
+                    display_name = "Arm Raise" if posture == "Arm_Raise" else "Squats"
+                    text = f"{display_name} - {status}"
+                    cv2.putText(frame, text, (10, 40), cv2.FONT_HERSHEY_SIMPLEX, 
+                               1.2, color, 3)
         
         out.write(frame)
     
     cap.release()
     out.release()
     
-    # Calculate detailed statistics
-    summary = {
-        'total_frames': frame_count,
-        'detections': len(detections),
-        'posture_counts': {},
-        'correct_count': sum(1 for d in detections if d['correct']),
-        'incorrect_count': sum(1 for d in detections if not d['correct']),
-        'avg_confidence': float(np.mean([d['confidence'] for d in detections])) if detections else 0.0
-    }
+    # Determine dominant pose
+    if pose_detections['Arm_Raise'] == 0 and pose_detections['Squats'] == 0:
+        return None, "Error: No valid poses detected in video"
     
-    for det in detections:
-        posture = det['posture']
-        summary['posture_counts'][posture] = summary['posture_counts'].get(posture, 0) + 1
+    dominant_pose = 'Arm_Raise' if pose_detections['Arm_Raise'] >= pose_detections['Squats'] else 'Squats'
+    
+    # Calculate correctness for dominant pose
+    if correctness_data[dominant_pose]:
+        correct_ratio = sum(correctness_data[dominant_pose]) / len(correctness_data[dominant_pose])
+        is_correct = correct_ratio >= 0.6  # 60% threshold for overall correctness
+    else:
+        is_correct = False
+    
+    # Format output: one of 4 possible results
+    display_name = "Arm Raise" if dominant_pose == "Arm_Raise" else "Squats"
+    status = "Correct" if is_correct else "Incorrect"
+    
+    summary = {
+        'detected_pose': display_name,
+        'status': status,
+        'result': f"{display_name} {status}"
+    }
     
     return result_filename, summary
 

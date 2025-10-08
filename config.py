@@ -102,8 +102,16 @@ SQUAT_HIP_OFFSET = 0.05     # Hip position offset threshold
 # ==========================================
 # CLASS NAMES
 # ==========================================
-# Default class names (will be overridden by training data)
+# Default class names - only 2 Zumba poses
 DEFAULT_CLASS_NAMES = ['Arm_Raise', 'Squats']
+
+# Output format - only 4 possible results
+OUTPUT_FORMATS = [
+    'Arm Raise Correct',
+    'Arm Raise Incorrect',
+    'Squats Correct',
+    'Squats Incorrect'
+]
 
 # ==========================================
 # LOGGING
