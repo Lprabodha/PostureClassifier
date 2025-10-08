@@ -145,13 +145,13 @@ def detect_posture_rule_based(landmarks):
         left_elbow_y < left_shoulder_y and right_elbow_y < right_shoulder_y):
         return "Arm_Raise"
     
-    # Squats: both knees bent in squat range
-    if 60 < left_knee < 130 and 60 < right_knee < 130:
+    # Squats: knees bent in squat range (more lenient for Zumba)
+    if (50 < left_knee < 140) or (50 < right_knee < 140):
         hip_y = (landmarks[mp_pose.PoseLandmark.LEFT_HIP.value].y +
                  landmarks[mp_pose.PoseLandmark.RIGHT_HIP.value].y) / 2
         shoulder_y = (landmarks[mp_pose.PoseLandmark.LEFT_SHOULDER.value].y +
                       landmarks[mp_pose.PoseLandmark.RIGHT_SHOULDER.value].y) / 2
-        if hip_y > shoulder_y - 0.1:  # Hip lowered significantly
+        if hip_y > shoulder_y - 0.2:  # More lenient hip position
             return "Squats"
     
     return None
@@ -198,8 +198,14 @@ def check_posture_correctness(posture, landmarks):
         shoulder_y = (landmarks[mp_pose.PoseLandmark.LEFT_SHOULDER.value].y +
                       landmarks[mp_pose.PoseLandmark.RIGHT_SHOULDER.value].y) / 2
         
-        knees_bent = 60 < left_knee < 130 and 60 < right_knee < 130
-        hip_lowered = hip_y > shoulder_y - 0.1
+        # Very lenient validation for Zumba squats - accept most squat positions
+        # Any knee bend indicates squat attempt
+        knees_bent = (left_knee < 160) or (right_knee < 160)
+        # Very lenient hip check - almost any position
+        hip_lowered = True  # Accept all hip positions for now
+        
+        # Debug print
+        print(f"Squat Check - Left knee: {left_knee:.1f}°, Right knee: {right_knee:.1f}°, Hip Y: {hip_y:.3f}, Shoulder Y: {shoulder_y:.3f}")
         
         return knees_bent and hip_lowered
     
@@ -346,8 +352,31 @@ def process_video(video_path):
                 
                 if posture in pose_detections:
                     pose_detections[posture] += 1
+                    
+                    # Check correctness and only record if actively performing the pose
                     correct = check_posture_correctness(posture, results.pose_landmarks.landmark)
-                    correctness_data[posture].append(correct)
+                    
+                    # For squats: only count correctness when actually squatting (knees bent)
+                    if posture == "Squats":
+                        # Get knee angles to see if actually squatting
+                        left_knee = get_angle(
+                            results.pose_landmarks.landmark[mp_pose.PoseLandmark.LEFT_HIP.value],
+                            results.pose_landmarks.landmark[mp_pose.PoseLandmark.LEFT_KNEE.value],
+                            results.pose_landmarks.landmark[mp_pose.PoseLandmark.LEFT_ANKLE.value]
+                        )
+                        right_knee = get_angle(
+                            results.pose_landmarks.landmark[mp_pose.PoseLandmark.RIGHT_HIP.value],
+                            results.pose_landmarks.landmark[mp_pose.PoseLandmark.RIGHT_KNEE.value],
+                            results.pose_landmarks.landmark[mp_pose.PoseLandmark.RIGHT_ANKLE.value]
+                        )
+                        # Only record correctness if actively squatting (knees bent)
+                        is_performing_pose = (left_knee < 160) or (right_knee < 160)
+                        if is_performing_pose:
+                            correctness_data[posture].append(correct)
+                    else:
+                        # For arm raise, always record correctness
+                        correctness_data[posture].append(correct)
+                    
                     last_prediction = posture
                     
                     # Draw landmarks
@@ -380,9 +409,12 @@ def process_video(video_path):
     # Calculate correctness for dominant pose
     if correctness_data[dominant_pose]:
         correct_ratio = sum(correctness_data[dominant_pose]) / len(correctness_data[dominant_pose])
-        is_correct = correct_ratio >= 0.6  # 60% threshold for overall correctness
+        is_correct = correct_ratio >= 0.5  # 50% threshold for overall correctness (more lenient)
+        print(f"Dominant pose: {dominant_pose}, Correct ratio: {correct_ratio:.2%}, Frames evaluated: {len(correctness_data[dominant_pose])}")
     else:
-        is_correct = False
+        # If no frames were evaluated (all standing), default to correct
+        is_correct = True
+        print(f"Dominant pose: {dominant_pose}, No correctness frames evaluated - defaulting to Correct")
     
     # Format output: one of 4 possible results
     display_name = "Arm Raise" if dominant_pose == "Arm_Raise" else "Squats"

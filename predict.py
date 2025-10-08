@@ -110,7 +110,7 @@ class PosturePredictor:
         shoulder_y = (landmarks[self.mp_pose.PoseLandmark.LEFT_SHOULDER.value].y +
                       landmarks[self.mp_pose.PoseLandmark.RIGHT_SHOULDER.value].y) / 2
         
-        if 60 < left_knee < 130 and 60 < right_knee < 130 and hip_y > shoulder_y - 0.1:
+        if ((50 < left_knee < 140) or (50 < right_knee < 140)) and hip_y > shoulder_y - 0.2:
             return "Squats"
         
         return None
@@ -155,8 +155,9 @@ class PosturePredictor:
             shoulder_y = (landmarks[self.mp_pose.PoseLandmark.LEFT_SHOULDER.value].y +
                           landmarks[self.mp_pose.PoseLandmark.RIGHT_SHOULDER.value].y) / 2
             
-            knees_bent = 60 < left_knee < 130 and 60 < right_knee < 130
-            hip_lowered = hip_y > shoulder_y - 0.1
+            # More lenient thresholds for Zumba squats
+            knees_bent = (50 < left_knee < 140) or (50 < right_knee < 140)
+            hip_lowered = hip_y > shoulder_y - 0.2
             
             return knees_bent and hip_lowered
             
