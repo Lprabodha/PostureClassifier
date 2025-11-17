@@ -479,6 +479,7 @@
                 // Get correct and incorrect counts per posture
                 const postureCorrectCounts = data.data.posture_correct_counts || {};
                 const postureIncorrectCounts = data.data.posture_incorrect_counts || {};
+                const incorrectPostures = [];
                 
                 // Display each identified posture with status
                 for (const [posture, totalCount] of Object.entries(data.data.posture_counts)) {
@@ -492,6 +493,7 @@
                         if (incorrectCount > correctCount) {
                             status = 'Incorrect';
                             statusClass = 'incorrect';
+                            incorrectPostures.push(posture);
                         } else {
                             status = 'Correct';
                             statusClass = 'correct';
@@ -504,6 +506,7 @@
                         } else {
                             status = 'Incorrect';
                             statusClass = 'incorrect';
+                            incorrectPostures.push(posture);
                         }
                     } else if (posture === 'Arm_Raise') {
                         // For Arm Raise: correct > incorrect means Correct
@@ -513,6 +516,7 @@
                         } else {
                             status = 'Incorrect';
                             statusClass = 'incorrect';
+                            incorrectPostures.push(posture);
                         }
                     } else {
                         // Default logic: correct > incorrect means Correct
@@ -522,6 +526,7 @@
                         } else {
                             status = 'Incorrect';
                             statusClass = 'incorrect';
+                            incorrectPostures.push(posture);
                         }
                     }
                     
@@ -536,6 +541,39 @@
                     </div>`;
                 }
                 html += '</div>';
+                
+                // Display video recommendations if any
+                if (data.data.video_recommendations && data.data.video_recommendations.length > 0) {
+                    html += '<div class="result" style="margin-top: 20px;">';
+                    html += '<div class="result-header"><h2>📹 Recommended Tutorial Videos</h2></div>';
+                    html += '<div class="result-body">';
+                    html += '<p style="margin-bottom: 15px; color: #666;">Improve your form with these tutorials:</p>';
+                    data.data.video_recommendations.forEach(video => {
+                        const postureName = video.posture_type.replace(/_/g, ' ');
+                        html += `<div style="margin-bottom: 15px; padding: 15px; background: #f8f9fa; border-radius: 10px; border-left: 4px solid #667eea;">
+                            <p style="font-weight: 600; margin-bottom: 8px; color: #333;">${video.title || postureName + ' Tutorial'}</p>
+                            <a href="${video.video_url}" target="_blank" style="display: inline-block; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 10px 20px; border-radius: 20px; text-decoration: none; font-weight: 600; transition: transform 0.2s;" onmouseover="this.style.transform='scale(1.05)'" onmouseout="this.style.transform='scale(1)'">
+                                ▶ Watch Tutorial
+                            </a>
+                        </div>`;
+                    });
+                    html += '</div></div>';
+                }
+                
+                // Display music recommendation
+                if (data.data.music_recommendation) {
+                    html += '<div class="result" style="margin-top: 20px;">';
+                    html += '<div class="result-header"><h2>🎵 Recommended Music</h2></div>';
+                    html += '<div class="result-body">';
+                    html += '<p style="margin-bottom: 15px; color: #666;">Dance to this recommended track:</p>';
+                    html += `<div style="padding: 15px; background: #f8f9fa; border-radius: 10px; border-left: 4px solid #ec4899;">
+                        <p style="font-weight: 600; margin-bottom: 8px; color: #333;">${data.data.music_recommendation.title || 'Zumba Music'}</p>
+                        <a href="${data.data.music_recommendation.music_url}" target="_blank" style="display: inline-block; background: linear-gradient(135deg, #ec4899 0%, #f97316 100%); color: white; padding: 10px 20px; border-radius: 20px; text-decoration: none; font-weight: 600; transition: transform 0.2s;" onmouseover="this.style.transform='scale(1.05)'" onmouseout="this.style.transform='scale(1)'">
+                            🎶 Play Music
+                        </a>
+                    </div>`;
+                    html += '</div></div>';
+                }
             }
 
             resultContent.innerHTML = html;

@@ -55,16 +55,16 @@
     <div class="pt-20 pb-12">
         <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
             <!-- Upload Section -->
-            <div class="bg-white rounded-lg shadow-lg p-6 mb-8">
+            <div class="bg-white rounded-lg shadow-lg p-6 mb-8 animate-slide-in">
                 <h2 class="text-2xl font-bold mb-6 gradient-text">Upload Your Zumba Video</h2>
-                <div id="upload-zone" class="border-2 border-dashed border-gray-300 rounded-lg p-12 text-center hover-lift cursor-pointer transition-all hover:border-zumba-purple">
+                <div id="upload-zone" class="border-2 border-dashed border-gray-300 rounded-lg p-12 text-center hover-lift cursor-pointer transition-all hover:border-zumba-purple hover:bg-zumba-purple/5">
                     <input type="file" id="file-input" class="hidden" accept="image/png,image/jpeg,video/mp4,video/avi,video/quicktime">
                     <svg class="w-12 h-12 mx-auto mb-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"></path>
                     </svg>
                     <p class="text-lg mb-2">Drag and drop your video here</p>
                     <p class="text-sm text-gray-500 mb-4">or</p>
-                    <button class="bg-zumba-purple text-white px-6 py-2 rounded-full hover:bg-zumba-purple/90">
+                    <button class="bg-zumba-purple text-white px-6 py-2 rounded-full hover:bg-zumba-purple/90 hover:scale-105 transition-transform shadow-md hover:shadow-xl animate-pulse">
                         Choose File
                     </button>
                     <p class="text-sm text-gray-500 mt-4">Support: Images (JPG, PNG) or Videos (MP4, AVI, MOV)</p>
@@ -88,44 +88,14 @@
                 <!-- Results Section -->
                 <div id="results-section" class="hidden">
                     <!-- Feedback Card -->
-                    <div class="bg-white rounded-lg shadow-lg p-6 mb-8">
-                        <h3 class="text-xl font-semibold mb-4">AI Feedback</h3>
+                    <div class="bg-white rounded-lg shadow-lg p-6 mb-8 animate-fade-in card-hover">
+                        <h3 class="text-xl font-semibold mb-4 gradient-text">AI Feedback</h3>
                         <div id="feedback-content" class="p-4 rounded-lg bg-green-50 text-green-700">
                             <p class="text-lg">Your posture is correct! Keep up the great work! 🎉</p>
                         </div>
                     </div>
 
-                    <!-- Corrective Video Section -->
-                    <div id="corrective-video" class="bg-white rounded-lg shadow-lg p-6 mb-8 hidden">
-                        <h3 class="text-xl font-semibold mb-4">Suggested Tutorial</h3>
-                        <div class="aspect-w-16 aspect-h-9">
-                            <div class="w-full h-64 bg-gray-200 rounded-lg flex items-center justify-center">
-                                <p class="text-gray-500">Tutorial Video Placeholder</p>
-                            </div>
-                        </div>
-                    </div>
 
-                    <!-- Music Recommendation -->
-                    <div class="bg-white rounded-lg shadow-lg p-6">
-                        <h3 class="text-xl font-semibold mb-4">Recommended Music</h3>
-                        <div class="space-y-4">
-                            <div class="flex items-center space-x-4">
-                                <div class="bg-zumba-orange/10 rounded-full p-3">
-                                    <svg class="w-8 h-8 text-zumba-orange" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19V6l12-3v13M9 19c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zm12-3c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zM9 10l12-3"></path>
-                    </svg>
-                                </div>
-                                <div>
-                                    <h4 class="font-semibold">La Vida Es Un Carnaval</h4>
-                                    <p class="text-sm text-gray-600">Style: Salsa • BPM: 120</p>
-                                </div>
-                            </div>
-                            <audio controls class="w-full">
-                                <source src="#" type="audio/mpeg">
-                                Your browser does not support the audio element.
-                            </audio>
-                        </div>
-                    </div>
                 </div>
             </div>
         </div>
@@ -285,6 +255,37 @@
                 }
                 
                 feedbackContent.className = 'p-4 rounded-lg bg-blue-50 text-blue-900';
+                
+                // Display video recommendations if any
+                if (resultData.video_recommendations && resultData.video_recommendations.length > 0) {
+                    feedbackHtml += '<div class="mt-6 pt-6 border-t">';
+                    feedbackHtml += '<h3 class="text-xl font-bold mb-4 text-zumba-purple">📹 Recommended Tutorial Videos</h3>';
+                    feedbackHtml += '<p class="text-sm text-gray-600 mb-4">Improve your form with these tutorials:</p>';
+                    resultData.video_recommendations.forEach((video, index) => {
+                        const postureName = video.posture_type.replace(/_/g, ' ');
+                        feedbackHtml += `<div class="mb-4 p-4 bg-white rounded-lg shadow-md hover:shadow-lg transition-shadow border-l-4 border-zumba-purple animate-fade-in" style="animation-delay: ${index * 0.1}s">
+                            <p class="font-semibold mb-2 text-gray-800">${video.title || postureName + ' Tutorial'}</p>
+                            <a href="${video.video_url}" target="_blank" class="inline-block bg-gradient-to-r from-zumba-purple to-zumba-pink text-white px-6 py-2 rounded-full font-semibold hover:scale-105 transition-transform shadow-md hover:shadow-xl">
+                                ▶ Watch Tutorial
+                            </a>
+                        </div>`;
+                    });
+                    feedbackHtml += '</div>';
+                }
+                
+                // Display music recommendation
+                if (resultData.music_recommendation) {
+                    feedbackHtml += '<div class="mt-6 pt-6 border-t">';
+                    feedbackHtml += '<h3 class="text-xl font-bold mb-4 text-zumba-pink">🎵 Recommended Music</h3>';
+                    feedbackHtml += '<p class="text-sm text-gray-600 mb-4">Dance to this recommended track:</p>';
+                    feedbackHtml += `<div class="p-4 bg-white rounded-lg shadow-md hover:shadow-lg transition-shadow border-l-4 border-zumba-pink animate-fade-in">
+                        <p class="font-semibold mb-2 text-gray-800">${resultData.music_recommendation.title || 'Zumba Music'}</p>
+                        <a href="${resultData.music_recommendation.music_url}" target="_blank" class="inline-block bg-gradient-to-r from-zumba-pink to-zumba-orange text-white px-6 py-2 rounded-full font-semibold hover:scale-105 transition-transform shadow-md hover:shadow-xl">
+                            🎶 Play Music
+                        </a>
+                    </div>`;
+                    feedbackHtml += '</div>';
+                }
             } else if (data.file_type === 'image' && data.data) {
                 const resultData = data.data;
                 feedbackHtml += `<div class="mb-4">

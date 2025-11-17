@@ -60,7 +60,7 @@
             <p class="text-xl md:text-2xl text-white mb-8">
                 Get personalized feedback on your Zumba moves and dance to recommended music
             </p>
-            <a href="{{ url_for('upload') }}">                <button class="bg-white text-zumba-purple hover:bg-gray-100 font-bold py-3 px-8 rounded-full shadow-lg transform transition hover:scale-105">                    Upload Your Zumba Video                </button>            </a>
+            <a href="{{ url_for('upload') }}">                <button class="bg-white text-zumba-purple hover:bg-gray-100 font-bold py-3 px-8 rounded-full shadow-lg transform transition hover:scale-105 animate-pulse">                    Upload Your Zumba Video                </button>            </a>
         </div>
         <div class="absolute bottom-0 left-0 right-0">
             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1440 120">
@@ -74,8 +74,8 @@
         <h2 class="text-3xl md:text-4xl font-bold text-center mb-16">How It Works</h2>
         <div class="grid grid-cols-1 md:grid-cols-3 gap-12">
             <!-- Step 1 -->
-            <div class="text-center">
-                <div class="bg-zumba-purple/10 rounded-full w-20 h-20 flex items-center justify-center mx-auto mb-6">
+            <div class="text-center card-hover animate-fade-in" style="animation-delay: 0.1s">
+                <div class="bg-zumba-purple/10 rounded-full w-20 h-20 flex items-center justify-center mx-auto mb-6 animate-bounce">
                     <svg class="w-10 h-10 text-zumba-purple" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"></path>
                     </svg>
@@ -84,8 +84,8 @@
                 <p class="text-gray-600">Share your Zumba dance video with our AI-powered system</p>
             </div>
             <!-- Step 2 -->
-            <div class="text-center">
-                <div class="bg-zumba-pink/10 rounded-full w-20 h-20 flex items-center justify-center mx-auto mb-6">
+            <div class="text-center card-hover animate-fade-in" style="animation-delay: 0.2s">
+                <div class="bg-zumba-pink/10 rounded-full w-20 h-20 flex items-center justify-center mx-auto mb-6 animate-bounce" style="animation-delay: 0.1s">
                     <svg class="w-10 h-10 text-zumba-pink" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"></path>
                     </svg>
@@ -94,8 +94,8 @@
                 <p class="text-gray-600">Receive detailed analysis and improvement suggestions</p>
             </div>
             <!-- Step 3 -->
-            <div class="text-center">
-                <div class="bg-zumba-orange/10 rounded-full w-20 h-20 flex items-center justify-center mx-auto mb-6">
+            <div class="text-center card-hover animate-fade-in" style="animation-delay: 0.3s">
+                <div class="bg-zumba-orange/10 rounded-full w-20 h-20 flex items-center justify-center mx-auto mb-6 animate-bounce" style="animation-delay: 0.2s">
                     <svg class="w-10 h-10 text-zumba-orange" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19V6l12-3v13M9 19c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zm12-3c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zM9 10l12-3"></path>
                     </svg>
