@@ -1,0 +1,306 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Upload Video - ZumbaFit Pro</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        'zumba-purple': '#8B5CF6',
+                        'zumba-pink': '#EC4899',
+                        'zumba-orange': '#F97316',
+                    }
+                }
+            }
+        }
+    </script>
+    <link href="{{ url_for('static', filename='styles.css') }}" rel="stylesheet">
+</head>
+<body class="bg-gray-50">
+    <!-- Navigation -->
+    <nav class="bg-white shadow-lg fixed w-full z-50">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between h-16">
+                <div class="flex items-center">
+                    <a href="{{ url_for('index') }}" class="text-2xl font-bold text-zumba-purple">ZumbaFit Pro</a>
+                </div>
+                <div class="hidden md:flex items-center space-x-8">
+                    <a href="{{ url_for('index') }}" class="text-gray-700 hover:text-zumba-purple">Home</a>
+                    <a href="{{ url_for('about') }}" class="text-gray-700 hover:text-zumba-purple">About</a>
+                    <a href="{{ url_for('upload') }}" class="text-gray-700 hover:text-zumba-purple">Upload Video</a>
+                </div>
+                <!-- Mobile menu button -->
+                <div class="md:hidden flex items-center">
+                    <button class="mobile-menu-button">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path>
+                        </svg>
+                    </button>
+                </div>
+            </div>
+        </div>
+        <!-- Mobile menu -->
+        <div class="mobile-menu hidden md:hidden">
+            <a href="{{ url_for('index') }}" class="block py-2 px-4 text-gray-700 hover:bg-zumba-purple hover:text-white">Home</a>
+            <a href="{{ url_for('about') }}" class="block py-2 px-4 text-gray-700 hover:bg-zumba-purple hover:text-white">About</a>
+            <a href="{{ url_for('upload') }}" class="block py-2 px-4 text-gray-700 hover:bg-zumba-purple hover:text-white">Upload Video</a>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <div class="pt-20 pb-12">
+        <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+            <!-- Upload Section -->
+            <div class="bg-white rounded-lg shadow-lg p-6 mb-8">
+                <h2 class="text-2xl font-bold mb-6 gradient-text">Upload Your Zumba Video</h2>
+                <div id="upload-zone" class="border-2 border-dashed border-gray-300 rounded-lg p-12 text-center hover-lift cursor-pointer transition-all hover:border-zumba-purple">
+                    <input type="file" id="file-input" class="hidden" accept="image/png,image/jpeg,video/mp4,video/avi,video/quicktime">
+                    <svg class="w-12 h-12 mx-auto mb-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"></path>
+                    </svg>
+                    <p class="text-lg mb-2">Drag and drop your video here</p>
+                    <p class="text-sm text-gray-500 mb-4">or</p>
+                    <button class="bg-zumba-purple text-white px-6 py-2 rounded-full hover:bg-zumba-purple/90">
+                        Choose File
+                    </button>
+                    <p class="text-sm text-gray-500 mt-4">Support: Images (JPG, PNG) or Videos (MP4, AVI, MOV)</p>
+                    <p class="text-sm text-gray-500">Maximum file size: 200MB</p>
+                </div>
+            </div>
+
+            <!-- Analysis Section (Initially Hidden) -->
+            <div id="analysis-section" class="hidden">
+                <!-- Loading State -->
+                <div id="loading-state" class="bg-white rounded-lg shadow-lg p-6 mb-8">
+                    <div class="flex items-center justify-center">
+                        <div class="animate-spin rounded-full h-12 w-12 border-4 border-zumba-purple border-t-transparent"></div>
+                    </div>
+                    <p class="text-center mt-4 text-lg">Analyzing your posture...</p>
+                    <div class="w-full bg-gray-200 rounded-full h-2 mt-4">
+                        <div class="progress-bar bg-gradient-to-r from-zumba-purple to-zumba-pink h-2 rounded-full" style="width: 0%"></div>
+                    </div>
+                </div>
+
+                <!-- Results Section -->
+                <div id="results-section" class="hidden">
+                    <!-- Feedback Card -->
+                    <div class="bg-white rounded-lg shadow-lg p-6 mb-8">
+                        <h3 class="text-xl font-semibold mb-4">AI Feedback</h3>
+                        <div id="feedback-content" class="p-4 rounded-lg bg-green-50 text-green-700">
+                            <p class="text-lg">Your posture is correct! Keep up the great work! 🎉</p>
+                        </div>
+                    </div>
+
+                    <!-- Corrective Video Section -->
+                    <div id="corrective-video" class="bg-white rounded-lg shadow-lg p-6 mb-8 hidden">
+                        <h3 class="text-xl font-semibold mb-4">Suggested Tutorial</h3>
+                        <div class="aspect-w-16 aspect-h-9">
+                            <div class="w-full h-64 bg-gray-200 rounded-lg flex items-center justify-center">
+                                <p class="text-gray-500">Tutorial Video Placeholder</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Music Recommendation -->
+                    <div class="bg-white rounded-lg shadow-lg p-6">
+                        <h3 class="text-xl font-semibold mb-4">Recommended Music</h3>
+                        <div class="space-y-4">
+                            <div class="flex items-center space-x-4">
+                                <div class="bg-zumba-orange/10 rounded-full p-3">
+                                    <svg class="w-8 h-8 text-zumba-orange" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19V6l12-3v13M9 19c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zm12-3c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zM9 10l12-3"></path>
+                    </svg>
+                                </div>
+                                <div>
+                                    <h4 class="font-semibold">La Vida Es Un Carnaval</h4>
+                                    <p class="text-sm text-gray-600">Style: Salsa • BPM: 120</p>
+                                </div>
+                            </div>
+                            <audio controls class="w-full">
+                                <source src="#" type="audio/mpeg">
+                                Your browser does not support the audio element.
+                            </audio>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+
+        // Mobile menu toggle
+        const mobileMenuButton = document.querySelector('.mobile-menu-button');
+        const mobileMenu = document.querySelector('.mobile-menu');
+
+        mobileMenuButton.addEventListener('click', () => {
+            mobileMenu.classList.toggle('hidden');
+        });
+
+        // Upload functionality
+        const uploadZone = document.getElementById('upload-zone');
+        const fileInput = document.getElementById('file-input');
+        const analysisSection = document.getElementById('analysis-section');
+        const loadingState = document.getElementById('loading-state');
+        const resultsSection = document.getElementById('results-section');
+        const progressBar = document.querySelector('.progress-bar');
+        const feedbackContent = document.getElementById('feedback-content');
+
+        uploadZone.addEventListener('click', () => {
+            fileInput.click();
+        });
+
+        uploadZone.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            uploadZone.classList.add('border-zumba-purple');
+        });
+
+        uploadZone.addEventListener('dragleave', () => {
+            uploadZone.classList.remove('border-zumba-purple');
+        });
+
+        uploadZone.addEventListener('drop', (e) => {
+            e.preventDefault();
+            uploadZone.classList.remove('border-zumba-purple');
+            const file = e.dataTransfer.files[0];
+            handleFile(file);
+        });
+
+        fileInput.addEventListener('change', (e) => {
+            if (e.target.files.length > 0) {
+                const file = e.target.files[0];
+                handleFile(file);
+            }
+        });
+
+        async function handleFile(file) {
+            if (!file) {
+                alert('Please select a valid file');
+                return;
+            }
+
+            // Show analysis section
+            analysisSection.classList.remove('hidden');
+            loadingState.classList.remove('hidden');
+            resultsSection.classList.add('hidden');
+
+            // Simulate progress
+            let progress = 0;
+            const progressInterval = setInterval(() => {
+                progress += 2;
+                progressBar.style.width = `${Math.min(progress, 90)}%`;
+            }, 100);
+
+            try {
+                // Create FormData for file upload
+                const formData = new FormData();
+                formData.append('file', file);
+
+                const response = await fetch('/predict', {
+                    method: 'POST',
+                    body: formData
+                });
+
+                const data = await response.json();
+
+                clearInterval(progressInterval);
+                progressBar.style.width = '100%';
+
+                setTimeout(() => {
+                    loadingState.classList.add('hidden');
+                    resultsSection.classList.remove('hidden');
+
+                    if (data.success) {
+                        displayResults(data);
+                    } else {
+                        feedbackContent.className = 'p-4 rounded-lg bg-red-50 text-red-700';
+                        feedbackContent.innerHTML = `<p class="text-lg">❌ ${data.error || 'Analysis failed'}</p>`;
+                    }
+                }, 500);
+
+            } catch (error) {
+                clearInterval(progressInterval);
+                console.error('Upload error:', error);
+                
+                loadingState.classList.add('hidden');
+                resultsSection.classList.remove('hidden');
+                
+                feedbackContent.className = 'p-4 rounded-lg bg-red-50 text-red-700';
+                feedbackContent.innerHTML = '<p class="text-lg">❌ Network error. Please try again.</p>';
+            }
+        }
+
+        function displayResults(data) {
+            let feedbackHtml = '';
+            
+            if (data.file_type === 'video' && data.data) {
+                // Display video results
+                const resultData = data.data;
+                
+                feedbackHtml += `<div class="mb-4">
+                    <video src="${data.result_url}" controls class="w-full rounded-lg"></video>
+                </div>`;
+                
+                feedbackHtml += `<div class="space-y-2">
+                    <p class="text-sm"><strong>Total Frames:</strong> ${resultData.total_frames}</p>
+                    <p class="text-sm"><strong>Detections:</strong> ${resultData.detections}</p>
+                    <p class="text-sm"><strong>Correct Form:</strong> <span class="text-green-600 font-semibold">${resultData.correct_count || 0}</span></p>
+                    <p class="text-sm"><strong>Needs Improvement:</strong> <span class="text-red-600 font-semibold">${resultData.incorrect_count || 0}</span></p>
+                    <p class="text-sm"><strong>Average Confidence:</strong> ${((resultData.avg_confidence || 0) * 100).toFixed(1)}%</p>
+                </div>`;
+                
+                // Display posture analysis
+                if (resultData.posture_counts) {
+                    const postureCorrectCounts = resultData.posture_correct_counts || {};
+                    const postureIncorrectCounts = resultData.posture_incorrect_counts || {};
+                    
+                    feedbackHtml += '<div class="mt-4 pt-4 border-t"><p class="font-semibold mb-2">Posture Analysis:</p>';
+                    
+                    for (const [posture, totalCount] of Object.entries(resultData.posture_counts)) {
+                        const correctCount = postureCorrectCounts[posture] || 0;
+                        const incorrectCount = postureIncorrectCounts[posture] || 0;
+                        
+                        let status, statusClass;
+                        if (posture === 'Knee_Extension') {
+                            status = (incorrectCount > correctCount) ? 'Incorrect' : 'Correct';
+                            statusClass = (incorrectCount > correctCount) ? 'text-red-600' : 'text-green-600';
+                        } else {
+                            status = (correctCount > incorrectCount) ? 'Correct' : 'Incorrect';
+                            statusClass = (correctCount > incorrectCount) ? 'text-green-600' : 'text-red-600';
+                        }
+                        
+                        const displayName = posture.replace(/_/g, ' ');
+                        feedbackHtml += `<p class="text-sm mb-1">
+                            <strong>${displayName}:</strong> 
+                            <span class="${statusClass} font-semibold">${status}</span> 
+                            (Correct: ${correctCount}, Incorrect: ${incorrectCount})
+                        </p>`;
+                    }
+                    
+                    feedbackHtml += '</div>';
+                }
+                
+                feedbackContent.className = 'p-4 rounded-lg bg-blue-50 text-blue-900';
+            } else if (data.file_type === 'image' && data.data) {
+                const resultData = data.data;
+                feedbackHtml += `<div class="mb-4">
+                    <img src="${data.result_url}" class="w-full rounded-lg" alt="Result">
+                </div>`;
+                feedbackHtml += `<div class="space-y-2">
+                    <p class="text-sm"><strong>Posture:</strong> ${resultData.posture}</p>
+                    <p class="text-sm"><strong>Confidence:</strong> ${(resultData.confidence * 100).toFixed(1)}%</p>
+                    <p class="text-sm"><strong>Form:</strong> <span class="${resultData.correct ? 'text-green-600' : 'text-red-600'} font-semibold">${resultData.correct ? 'Correct' : 'Needs Improvement'}</span></p>
+                </div>`;
+                feedbackContent.className = `p-4 rounded-lg ${resultData.correct ? 'bg-green-50 text-green-700' : 'bg-yellow-50 text-yellow-700'}`;
+            }
+            
+            feedbackContent.innerHTML = feedbackHtml;
+        }
+
+    </script>
+</body>
+</html> 

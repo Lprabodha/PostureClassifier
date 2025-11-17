@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="en" >
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>About - ZumbaFit Pro</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            'zumba-purple': '#8B5CF6',
+            'zumba-pink': '#EC4899',
+            'zumba-orange': '#F97316',
+          },
+          animation: {
+            'pulse-slow': 'pulse 4s ease-in-out infinite',
+            'float-up': 'floatUp 3s ease-in-out infinite',
+          },
+          keyframes: {
+            floatUp: {
+              '0%, 100%': { transform: 'translateY(0)' },
+              '50%': { transform: 'translateY(-10px)' },
+            },
+          },
+        },
+      },
+    }
+  </script>
+  <link href="{{ url_for('static', filename='styles.css') }}" rel="stylesheet" />
+</head>
+<body class="bg-gray-50 relative overflow-x-hidden">
+  <!-- Navigation -->
+  <nav class="bg-white shadow-lg fixed w-full z-50">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="flex justify-between h-16">
+        <div class="flex items-center">
+          <div class="text-2xl font-bold text-zumba-purple">ZumbaFit Pro</div>
+        </div>
+        <div class="hidden md:flex items-center space-x-8">
+          <a href="{{ url_for('index') }}" class="text-gray-700 hover:text-zumba-purple">Home</a>
+          <a href="{{ url_for('about') }}" class="text-zumba-purple font-semibold">About</a>
+          <a href="{{ url_for('upload') }}" class="text-gray-700 hover:text-zumba-purple">Upload Video</a>
+        </div>
+        <!-- Mobile menu button -->
+        <div class="md:hidden flex items-center">
+          <button class="mobile-menu-button" aria-label="Toggle menu">
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path>
+            </svg>
+          </button>
+        </div>
+      </div>
+    </div>
+    <!-- Mobile menu -->
+    <div class="mobile-menu hidden md:hidden">
+      <a href="{{ url_for('index') }}" class="block py-2 px-4 text-gray-700 hover:bg-zumba-purple hover:text-white">Home</a>
+      <a href="{{ url_for('about') }}" class="block py-2 px-4 text-zumba-purple font-semibold hover:bg-zumba-purple hover:text-white">About</a>
+      <a href="{{ url_for('upload') }}" class="block py-2 px-4 text-gray-700 hover:bg-zumba-purple hover:text-white">Upload Video</a>
+    </div>
+  </nav>
+
+  <!-- Hero Section with animated gradient background -->
+  <section class="relative pt-24 pb-20 bg-gradient-to-r from-zumba-purple via-zumba-pink to-zumba-orange overflow-hidden">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+      <h1 class="text-5xl md:text-6xl font-extrabold text-white mb-6 animate-pulse-slow">
+        About ZumbaFit Pro
+      </h1>
+      <p class="text-xl md:text-2xl text-white max-w-3xl mx-auto mb-12">
+        Dance your way to fitness with personalized AI-powered feedback and music recommendations.
+      </p>
+    </div>
+    <!-- Floating circles for creative effect -->
+    <div class="absolute top-10 left-10 w-24 h-24 bg-zumba-pink rounded-full opacity-30 animate-float-up"></div>
+    <div class="absolute bottom-20 right-20 w-32 h-32 bg-zumba-orange rounded-full opacity-20 animate-float-up animation-delay-2000"></div>
+    <div class="absolute top-1/2 left-1/4 w-16 h-16 bg-zumba-purple rounded-full opacity-25 animate-float-up animation-delay-1000"></div>
+  </section>
+
+  <!-- Mission and Vision Section -->
+  <section class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20">
+    <div class="grid md:grid-cols-2 gap-16 items-center">
+      <div>
+        <h2 class="text-4xl font-bold text-zumba-purple mb-6">Our Mission</h2>
+        <p class="text-gray-700 text-lg mb-4">
+          To make fitness enjoyable and accessible by combining the energy of Zumba with cutting-edge AI technology.
+        </p>
+        <p class="text-gray-700 text-lg">
+          We empower dancers of all levels to improve their skills and stay motivated through personalized feedback and music.
+        </p>
+      </div>
+      <div>
+        <img src="https://images.unsplash.com/photo-1518609878373-06d740f60d8b?auto=format&fit=crop&w=600&q=80" alt="Dancing group" class="rounded-lg shadow-lg" />
+      </div>
+    </div>
+  </section>
+
+  <!-- Team Section -->
+  <section class="bg-zumba-purple/10 py-20">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+      <h2 class="text-4xl font-bold text-zumba-purple mb-12">Meet the Team</h2>
+      <div class="grid grid-cols-1 sm:grid-cols-3 gap-12">
+        <div class="bg-white rounded-lg shadow-lg p-6 hover:shadow-2xl transition">
+          <img src="https://randomuser.me/api/portraits/women/68.jpg" alt="Team Member 1" class="w-32 h-32 rounded-full mx-auto mb-4 object-cover" />
+          <h3 class="text-xl font-semibold mb-1">Sophia Lee</h3>
+          <p class="text-zumba-pink font-semibold mb-2">Lead Instructor</p>
+          <p class="text-gray-600">Passionate about dance and fitness, Sophia leads our expert team to help you achieve your goals.</p>
+        </div>
+        <div class="bg-white rounded-lg shadow-lg p-6 hover:shadow-2xl transition">
+          <img src="https://randomuser.me/api/portraits/men/75.jpg" alt="Team Member 2" class="w-32 h-32 rounded-full mx-auto mb-4 object-cover" />
+          <h3 class="text-xl font-semibold mb-1">Carlos Ramirez</h3>
+          <p class="text-zumba-pink font-semibold mb-2">AI Developer</p>
+          <p class="text-gray-600">Carlos develops the AI algorithms that provide personalized feedback on your dance moves.</p>
+        </div>
+        <div class="bg-white rounded-lg shadow-lg p-6 hover:shadow-2xl transition">
+          <img src="https://randomuser.me/api/portraits/women/65.jpg" alt="Team Member 3" class="w-32 h-32 rounded-full mx-auto mb-4 object-cover" />
+          <h3 class="text-xl font-semibold mb-1">Emily Chen</h3>
+          <p class="text-zumba-pink font-semibold mb-2">Music Curator</p>
+          <p class="text-gray-600">Emily selects the best music tracks to keep you motivated and dancing to the beat.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <script>
+    // Mobile menu toggle
+    const mobileMenuButton = document.querySelector('.mobile-menu-button');
+    const mobileMenu = document.querySelector('.mobile-menu');
+
+    mobileMenuButton.addEventListener('click', () => {
+      mobileMenu.classList.toggle('hidden');
+    });
+  </script>
+
+  <!-- Footer -->
+  <footer class="bg-zumba-purple text-white py-8 mt-12">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+      <p class="text-sm">&copy; 2024 ZumbaFit Pro. All rights reserved.</p>
+      <p class="mt-2 text-sm">Follow us on 
+        <a href="#" class="underline hover:text-zumba-pink">Instagram</a>, 
+        <a href="#" class="underline hover:text-zumba-pink">Facebook</a>, and 
+        <a href="#" class="underline hover:text-zumba-pink">Twitter</a>.
+      </p>
+    </div>
+  </footer>
+</body>
+</html>

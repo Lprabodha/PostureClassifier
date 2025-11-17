@@ -378,11 +378,13 @@ def process_video(video_path):
     cap.release()
     out.release()
     
-    # Calculate detailed statistics
+    # Calculate detailed statistics with per-posture correct/incorrect counts
     summary = {
         'total_frames': frame_count,
         'detections': len(detections),
         'posture_counts': {},
+        'posture_correct_counts': {},
+        'posture_incorrect_counts': {},
         'correct_count': sum(1 for d in detections if d['correct']),
         'incorrect_count': sum(1 for d in detections if not d['correct']),
         'avg_confidence': float(np.mean([d['confidence'] for d in detections])) if detections else 0.0
@@ -391,6 +393,10 @@ def process_video(video_path):
     for det in detections:
         posture = det['posture']
         summary['posture_counts'][posture] = summary['posture_counts'].get(posture, 0) + 1
+        if det['correct']:
+            summary['posture_correct_counts'][posture] = summary['posture_correct_counts'].get(posture, 0) + 1
+        else:
+            summary['posture_incorrect_counts'][posture] = summary['posture_incorrect_counts'].get(posture, 0) + 1
     
     return result_filename, summary
 
@@ -399,6 +405,18 @@ def process_video(video_path):
 def index():
     """Main page"""
     return render_template('index.html', classes=class_names)
+
+
+@app.route('/upload')
+def upload():
+    """Upload page"""
+    return render_template('upload.html')
+
+
+@app.route('/about')
+def about():
+    """About page"""
+    return render_template('about.html')
 
 
 @app.route('/predict', methods=['POST'])
