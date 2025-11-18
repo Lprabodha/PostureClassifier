@@ -52,15 +52,36 @@
     </nav>
 
     <!-- Hero Section -->
-    <div class="relative bg-gradient-to-r from-zumba-purple via-zumba-pink to-zumba-orange pt-16">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-24 text-center">
-            <h1 class="text-4xl md:text-6xl font-bold text-white mb-6">
+    <div class="relative bg-gradient-to-r from-zumba-purple via-zumba-pink to-zumba-orange pt-16 overflow-hidden">
+        <!-- Decorative elements -->
+        <div class="absolute top-10 left-10 w-32 h-32 bg-white/10 rounded-full blur-2xl animate-pulse"></div>
+        <div class="absolute bottom-20 right-20 w-40 h-40 bg-white/10 rounded-full blur-3xl animate-pulse" style="animation-delay: 1s"></div>
+        <div class="absolute top-1/2 left-1/4 w-24 h-24 bg-white/10 rounded-full blur-xl animate-pulse" style="animation-delay: 0.5s"></div>
+        
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-24 text-center relative z-10">
+            <div class="mb-8 flex justify-center">
+                <div class="w-32 h-32 bg-white/20 rounded-full flex items-center justify-center backdrop-blur-sm shadow-2xl animate-bounce">
+                    <svg class="w-16 h-16 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.828 14.828a4 4 0 01-5.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                    </svg>
+                </div>
+            </div>
+            <h1 class="text-4xl md:text-6xl font-bold text-white mb-6 drop-shadow-lg">
                 Dance Your Way to Fitness
             </h1>
-            <p class="text-xl md:text-2xl text-white mb-8">
+            <p class="text-xl md:text-2xl text-white mb-8 drop-shadow-md">
                 Get personalized feedback on your Zumba moves and dance to recommended music
             </p>
-            <a href="{{ url_for('upload') }}">                <button class="bg-white text-zumba-purple hover:bg-gray-100 font-bold py-3 px-8 rounded-full shadow-lg transform transition hover:scale-105 animate-pulse">                    Upload Your Zumba Video                </button>            </a>
+            <a href="{{ url_for('upload') }}" class="inline-block">
+                <button class="bg-white text-zumba-purple hover:bg-gray-100 font-bold py-4 px-10 rounded-full shadow-2xl transform transition hover:scale-110 hover:shadow-3xl text-lg relative z-10 w-full sm:w-auto">
+                    <span class="flex items-center justify-center">
+                        <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"></path>
+                        </svg>
+                        Upload Your Zumba Video
+                    </span>
+                </button>
+            </a>
         </div>
         <div class="absolute bottom-0 left-0 right-0">
             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1440 120">
@@ -70,37 +91,37 @@
     </div>
 
     <!-- How It Works Section -->
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-24">
-        <h2 class="text-3xl md:text-4xl font-bold text-center mb-16">How It Works</h2>
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-24 bg-gradient-to-b from-gray-50 to-white">
+        <h2 class="text-3xl md:text-4xl font-bold text-center mb-16 gradient-text">How It Works</h2>
         <div class="grid grid-cols-1 md:grid-cols-3 gap-12">
             <!-- Step 1 -->
-            <div class="text-center card-hover animate-fade-in" style="animation-delay: 0.1s">
-                <div class="bg-zumba-purple/10 rounded-full w-20 h-20 flex items-center justify-center mx-auto mb-6 animate-bounce">
-                    <svg class="w-10 h-10 text-zumba-purple" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <div class="text-center card-hover animate-fade-in bg-white rounded-xl p-8 shadow-lg border-2 border-zumba-purple/20 hover:border-zumba-purple transition-all" style="animation-delay: 0.1s">
+                <div class="bg-gradient-to-br from-zumba-purple to-zumba-pink rounded-full w-24 h-24 flex items-center justify-center mx-auto mb-6 shadow-xl animate-bounce">
+                    <svg class="w-12 h-12 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"></path>
                     </svg>
                 </div>
-                <h3 class="text-xl font-semibold mb-4">Upload Video</h3>
+                <h3 class="text-xl font-semibold mb-4 text-zumba-purple">Upload Video</h3>
                 <p class="text-gray-600">Share your Zumba dance video with our AI-powered system</p>
             </div>
             <!-- Step 2 -->
-            <div class="text-center card-hover animate-fade-in" style="animation-delay: 0.2s">
-                <div class="bg-zumba-pink/10 rounded-full w-20 h-20 flex items-center justify-center mx-auto mb-6 animate-bounce" style="animation-delay: 0.1s">
-                    <svg class="w-10 h-10 text-zumba-pink" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <div class="text-center card-hover animate-fade-in bg-white rounded-xl p-8 shadow-lg border-2 border-zumba-pink/20 hover:border-zumba-pink transition-all" style="animation-delay: 0.2s">
+                <div class="bg-gradient-to-br from-zumba-pink to-zumba-orange rounded-full w-24 h-24 flex items-center justify-center mx-auto mb-6 shadow-xl animate-bounce" style="animation-delay: 0.1s">
+                    <svg class="w-12 h-12 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"></path>
                     </svg>
                 </div>
-                <h3 class="text-xl font-semibold mb-4">Get Feedback</h3>
+                <h3 class="text-xl font-semibold mb-4 text-zumba-pink">Get Feedback</h3>
                 <p class="text-gray-600">Receive detailed analysis and improvement suggestions</p>
             </div>
             <!-- Step 3 -->
-            <div class="text-center card-hover animate-fade-in" style="animation-delay: 0.3s">
-                <div class="bg-zumba-orange/10 rounded-full w-20 h-20 flex items-center justify-center mx-auto mb-6 animate-bounce" style="animation-delay: 0.2s">
-                    <svg class="w-10 h-10 text-zumba-orange" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <div class="text-center card-hover animate-fade-in bg-white rounded-xl p-8 shadow-lg border-2 border-zumba-orange/20 hover:border-zumba-orange transition-all" style="animation-delay: 0.3s">
+                <div class="bg-gradient-to-br from-zumba-orange to-zumba-pink rounded-full w-24 h-24 flex items-center justify-center mx-auto mb-6 shadow-xl animate-bounce" style="animation-delay: 0.2s">
+                    <svg class="w-12 h-12 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19V6l12-3v13M9 19c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zm12-3c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zM9 10l12-3"></path>
                     </svg>
                 </div>
-                <h3 class="text-xl font-semibold mb-4">Dance with Music</h3>
+                <h3 class="text-xl font-semibold mb-4 text-zumba-orange">Dance with Music</h3>
                 <p class="text-gray-600">Practice with our recommended music selections</p>
             </div>
         </div>
