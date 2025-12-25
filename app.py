@@ -453,6 +453,12 @@ def about():
     return render_template('about.html')
 
 
+@app.route('/model-accuracy')
+def model_accuracy():
+    """Model accuracy visualization page"""
+    return render_template('model_accuracy.html')
+
+
 @app.route('/predict', methods=['POST'])
 def predict():
     """Handle file upload and prediction"""
