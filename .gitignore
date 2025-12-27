@@ -8,6 +8,7 @@ uploads/
 *.pyo
 *.pyd
 *.sqlite3
+recommendations.db
 .DS_Store
 .env
 .idea/

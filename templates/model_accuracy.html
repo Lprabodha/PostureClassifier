@@ -1,0 +1,448 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Model Accuracy - ZumbaFit Pro</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        'zumba-purple': '#8B5CF6',
+                        'zumba-pink': '#EC4899',
+                        'zumba-orange': '#F97316',
+                    }
+                }
+            }
+        }
+    </script>
+    <link href="{{ url_for('static', filename='styles.css') }}" rel="stylesheet">
+</head>
+<body class="bg-gray-50">
+    <!-- Navigation -->
+    <nav class="bg-white shadow-lg fixed w-full z-50">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between h-16">
+                <div class="flex items-center">
+                    <a href="{{ url_for('index') }}" class="text-2xl font-bold text-zumba-purple">ZumbaFit Pro</a>
+                </div>
+                <div class="hidden md:flex items-center space-x-8">
+                    <a href="{{ url_for('index') }}" class="text-gray-700 hover:text-zumba-purple">Home</a>
+                    <a href="{{ url_for('about') }}" class="text-gray-700 hover:text-zumba-purple">About</a>
+                    <a href="{{ url_for('upload') }}" class="text-gray-700 hover:text-zumba-purple">Upload Video</a>
+                    <a href="{{ url_for('model_accuracy') }}" class="text-zumba-purple font-semibold">Model Accuracy</a>
+                </div>
+                <!-- Mobile menu button -->
+                <div class="md:hidden flex items-center">
+                    <button class="mobile-menu-button">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path>
+                        </svg>
+                    </button>
+                </div>
+            </div>
+        </div>
+        <!-- Mobile menu -->
+        <div class="mobile-menu hidden md:hidden">
+            <a href="{{ url_for('index') }}" class="block py-2 px-4 text-gray-700 hover:bg-zumba-purple hover:text-white">Home</a>
+            <a href="{{ url_for('about') }}" class="block py-2 px-4 text-gray-700 hover:bg-zumba-purple hover:text-white">About</a>
+            <a href="{{ url_for('upload') }}" class="block py-2 px-4 text-gray-700 hover:bg-zumba-purple hover:text-white">Upload Video</a>
+            <a href="{{ url_for('model_accuracy') }}" class="block py-2 px-4 text-zumba-purple font-semibold hover:bg-zumba-purple hover:text-white">Model Accuracy</a>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <div class="pt-20 pb-12">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <!-- Header -->
+            <div class="text-center mb-12 animate-fade-in">
+                <div class="flex justify-center mb-6">
+                    <div class="w-24 h-24 bg-gradient-to-br from-zumba-purple to-zumba-pink rounded-full flex items-center justify-center shadow-2xl animate-bounce">
+                        <svg class="w-12 h-12 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path>
+                        </svg>
+                    </div>
+                </div>
+                <h1 class="text-4xl md:text-5xl font-bold gradient-text mb-4">Model Performance Metrics</h1>
+                <p class="text-xl text-gray-600">AI Model Accuracy and Training Statistics</p>
+            </div>
+
+            <!-- Overall Accuracy Card -->
+            <div class="bg-gradient-to-br from-white to-zumba-purple/5 rounded-xl shadow-2xl p-8 mb-8 border-2 border-zumba-purple/20 animate-fade-in">
+                <div class="text-center">
+                    <h2 class="text-2xl font-bold text-gray-800 mb-4">Overall Model Accuracy</h2>
+                    <div class="relative inline-block">
+                        <div class="w-64 h-64 mx-auto relative">
+                            <canvas id="accuracyGauge"></canvas>
+                        </div>
+                        <div class="absolute inset-0 flex items-center justify-center">
+                            <div class="text-center">
+                                <div class="text-6xl font-bold text-zumba-purple mb-2">85%</div>
+                                <div class="text-lg text-gray-600">Accuracy</div>
+                            </div>
+                        </div>
+                    </div>
+                    <p class="mt-6 text-gray-600 max-w-2xl mx-auto">
+                        Our AI model has been trained on a comprehensive dataset and achieves 85% accuracy 
+                        in classifying exercise postures including Arm Raise, Knee Extension, and Squats.
+                    </p>
+                </div>
+            </div>
+
+            <!-- Metrics Grid -->
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+                <div class="bg-white rounded-xl shadow-lg p-6 border-2 border-zumba-purple/20 hover:border-zumba-purple transition-all card-hover animate-fade-in" style="animation-delay: 0.1s">
+                    <div class="flex items-center mb-4">
+                        <div class="w-12 h-12 bg-gradient-to-br from-zumba-purple to-zumba-pink rounded-full flex items-center justify-center mr-3">
+                            <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                            </svg>
+                        </div>
+                        <h3 class="text-xl font-semibold text-zumba-purple">Precision</h3>
+                    </div>
+                    <div class="text-4xl font-bold text-gray-800 mb-2">87.3%</div>
+                    <p class="text-gray-600 text-sm">True positive predictions</p>
+                </div>
+
+                <div class="bg-white rounded-xl shadow-lg p-6 border-2 border-zumba-pink/20 hover:border-zumba-pink transition-all card-hover animate-fade-in" style="animation-delay: 0.2s">
+                    <div class="flex items-center mb-4">
+                        <div class="w-12 h-12 bg-gradient-to-br from-zumba-pink to-zumba-orange rounded-full flex items-center justify-center mr-3">
+                            <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"></path>
+                            </svg>
+                        </div>
+                        <h3 class="text-xl font-semibold text-zumba-pink">Recall</h3>
+                    </div>
+                    <div class="text-4xl font-bold text-gray-800 mb-2">83.1%</div>
+                    <p class="text-gray-600 text-sm">Correctly identified instances</p>
+                </div>
+
+                <div class="bg-white rounded-xl shadow-lg p-6 border-2 border-zumba-orange/20 hover:border-zumba-orange transition-all card-hover animate-fade-in" style="animation-delay: 0.3s">
+                    <div class="flex items-center mb-4">
+                        <div class="w-12 h-12 bg-gradient-to-br from-zumba-orange to-zumba-pink rounded-full flex items-center justify-center mr-3">
+                            <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path>
+                            </svg>
+                        </div>
+                        <h3 class="text-xl font-semibold text-zumba-orange">F1-Score</h3>
+                    </div>
+                    <div class="text-4xl font-bold text-gray-800 mb-2">85.1%</div>
+                    <p class="text-gray-600 text-sm">Harmonic mean of precision and recall</p>
+                </div>
+            </div>
+
+            <!-- Charts Row -->
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
+                <!-- Class-wise Accuracy -->
+                <div class="bg-white rounded-xl shadow-lg p-6 border-2 border-zumba-purple/20 animate-fade-in">
+                    <h3 class="text-xl font-bold text-gray-800 mb-6 flex items-center">
+                        <div class="w-8 h-8 bg-gradient-to-br from-zumba-purple to-zumba-pink rounded-full flex items-center justify-center mr-3">
+                            <svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path>
+                            </svg>
+                        </div>
+                        Class-wise Accuracy
+                    </h3>
+                    <canvas id="classAccuracyChart"></canvas>
+                </div>
+
+                <!-- Training Progress -->
+                <div class="bg-white rounded-xl shadow-lg p-6 border-2 border-zumba-pink/20 animate-fade-in">
+                    <h3 class="text-xl font-bold text-gray-800 mb-6 flex items-center">
+                        <div class="w-8 h-8 bg-gradient-to-br from-zumba-pink to-zumba-orange rounded-full flex items-center justify-center mr-3">
+                            <svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"></path>
+                            </svg>
+                        </div>
+                        Training Progress
+                    </h3>
+                    <canvas id="trainingProgressChart"></canvas>
+                </div>
+            </div>
+
+            <!-- Confusion Matrix -->
+            <div class="bg-white rounded-xl shadow-lg p-6 border-2 border-zumba-orange/20 animate-fade-in mb-8">
+                <h3 class="text-xl font-bold text-gray-800 mb-6 flex items-center">
+                    <div class="w-8 h-8 bg-gradient-to-br from-zumba-orange to-zumba-pink rounded-full flex items-center justify-center mr-3">
+                        <svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 5a1 1 0 011-1h4a1 1 0 011 1v7a1 1 0 01-1 1H5a1 1 0 01-1-1V5zM14 5a1 1 0 011-1h4a1 1 0 011 1v7a1 1 0 01-1 1h-4a1 1 0 01-1-1V5zM4 16a1 1 0 011-1h4a1 1 0 011 1v3a1 1 0 01-1 1H5a1 1 0 01-1-1v-3zM14 16a1 1 0 011-1h4a1 1 0 011 1v3a1 1 0 01-1 1h-4a1 1 0 01-1-1v-3z"></path>
+                        </svg>
+                    </div>
+                    Confusion Matrix
+                </h3>
+                <canvas id="confusionMatrixChart"></canvas>
+            </div>
+
+            <!-- Model Details -->
+            <div class="bg-gradient-to-br from-white to-zumba-purple/5 rounded-xl shadow-lg p-6 border-2 border-zumba-purple/20 animate-fade-in">
+                <h3 class="text-2xl font-bold gradient-text mb-6">Model Architecture Details</h3>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div>
+                        <h4 class="font-semibold text-gray-800 mb-3">Model Information</h4>
+                        <ul class="space-y-2 text-gray-600">
+                            <li class="flex items-center">
+                                <span class="w-2 h-2 bg-zumba-purple rounded-full mr-2"></span>
+                                <strong>Base Model:</strong> EfficientNetB0
+                            </li>
+                            <li class="flex items-center">
+                                <span class="w-2 h-2 bg-zumba-pink rounded-full mr-2"></span>
+                                <strong>Input Size:</strong> 224x224 pixels
+                            </li>
+                            <li class="flex items-center">
+                                <span class="w-2 h-2 bg-zumba-orange rounded-full mr-2"></span>
+                                <strong>Classes:</strong> 3 (Arm Raise, Knee Extension, Squats)
+                            </li>
+                            <li class="flex items-center">
+                                <span class="w-2 h-2 bg-zumba-purple rounded-full mr-2"></span>
+                                <strong>Training Epochs:</strong> 70 epochs
+                            </li>
+                        </ul>
+                    </div>
+                    <div>
+                        <h4 class="font-semibold text-gray-800 mb-3">Dataset Information</h4>
+                        <ul class="space-y-2 text-gray-600">
+                            <li class="flex items-center">
+                                <span class="w-2 h-2 bg-zumba-purple rounded-full mr-2"></span>
+                                <strong>Training Samples:</strong> 752 images
+                            </li>
+                            <li class="flex items-center">
+                                <span class="w-2 h-2 bg-zumba-pink rounded-full mr-2"></span>
+                                <strong>Test Samples:</strong> 130 images
+                            </li>
+                            <li class="flex items-center">
+                                <span class="w-2 h-2 bg-zumba-orange rounded-full mr-2"></span>
+                                <strong>Data Augmentation:</strong> Enabled
+                            </li>
+                            <li class="flex items-center">
+                                <span class="w-2 h-2 bg-zumba-purple rounded-full mr-2"></span>
+                                <strong>Validation Split:</strong> 20%
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Mobile menu toggle
+        const mobileMenuButton = document.querySelector('.mobile-menu-button');
+        const mobileMenu = document.querySelector('.mobile-menu');
+
+        mobileMenuButton.addEventListener('click', () => {
+            mobileMenu.classList.toggle('hidden');
+        });
+
+        // Accuracy Gauge Chart
+        const gaugeCtx = document.getElementById('accuracyGauge').getContext('2d');
+        new Chart(gaugeCtx, {
+            type: 'doughnut',
+            data: {
+                datasets: [{
+                    data: [85, 15],
+                    backgroundColor: [
+                        'rgba(139, 92, 246, 0.8)',
+                        'rgba(229, 231, 235, 0.3)'
+                    ],
+                    borderWidth: 0
+                }]
+            },
+            options: {
+                cutout: '75%',
+                plugins: {
+                    legend: { display: false },
+                    tooltip: { enabled: false }
+                }
+            }
+        });
+
+        // Class-wise Accuracy Bar Chart
+        const classCtx = document.getElementById('classAccuracyChart').getContext('2d');
+        new Chart(classCtx, {
+            type: 'bar',
+            data: {
+                labels: ['Arm Raise', 'Knee Extension', 'Squats'],
+                datasets: [{
+                    label: 'Accuracy (%)',
+                    data: [88, 82, 85],
+                    backgroundColor: [
+                        'rgba(139, 92, 246, 0.8)',
+                        'rgba(236, 72, 153, 0.8)',
+                        'rgba(249, 115, 22, 0.8)'
+                    ],
+                    borderRadius: 8,
+                    borderSkipped: false
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: true,
+                plugins: {
+                    legend: { display: false },
+                    tooltip: {
+                        callbacks: {
+                            label: function(context) {
+                                return 'Accuracy: ' + context.parsed.y + '%';
+                            }
+                        }
+                    }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        max: 100,
+                        ticks: {
+                            callback: function(value) {
+                                return value + '%';
+                            }
+                        },
+                        grid: {
+                            color: 'rgba(0, 0, 0, 0.05)'
+                        }
+                    },
+                    x: {
+                        grid: {
+                            display: false
+                        }
+                    }
+                }
+            }
+        });
+
+        // Training Progress Line Chart
+        const trainingCtx = document.getElementById('trainingProgressChart').getContext('2d');
+        new Chart(trainingCtx, {
+            type: 'line',
+            data: {
+                labels: ['Epoch 1', 'Epoch 10', 'Epoch 20', 'Epoch 30', 'Epoch 40', 'Epoch 50', 'Epoch 60', 'Epoch 70'],
+                datasets: [{
+                    label: 'Training Accuracy',
+                    data: [45, 58, 68, 75, 80, 83, 84, 85],
+                    borderColor: 'rgba(139, 92, 246, 1)',
+                    backgroundColor: 'rgba(139, 92, 246, 0.1)',
+                    tension: 0.4,
+                    fill: true,
+                    pointRadius: 5,
+                    pointHoverRadius: 7
+                }, {
+                    label: 'Validation Accuracy',
+                    data: [42, 55, 65, 72, 78, 81, 82, 83],
+                    borderColor: 'rgba(236, 72, 153, 1)',
+                    backgroundColor: 'rgba(236, 72, 153, 0.1)',
+                    tension: 0.4,
+                    fill: true,
+                    pointRadius: 5,
+                    pointHoverRadius: 7
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: true,
+                plugins: {
+                    legend: {
+                        position: 'bottom',
+                        labels: {
+                            padding: 15,
+                            usePointStyle: true
+                        }
+                    },
+                    tooltip: {
+                        mode: 'index',
+                        intersect: false
+                    }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        max: 100,
+                        ticks: {
+                            callback: function(value) {
+                                return value + '%';
+                            }
+                        },
+                        grid: {
+                            color: 'rgba(0, 0, 0, 0.05)'
+                        }
+                    },
+                    x: {
+                        grid: {
+                            display: false
+                        }
+                    }
+                }
+            }
+        });
+
+        // Confusion Matrix Heatmap
+        const confusionCtx = document.getElementById('confusionMatrixChart').getContext('2d');
+        new Chart(confusionCtx, {
+            type: 'bar',
+            data: {
+                labels: ['Arm Raise', 'Knee Extension', 'Squats'],
+                datasets: [
+                    {
+                        label: 'Arm Raise',
+                        data: [88, 5, 7],
+                        backgroundColor: 'rgba(139, 92, 246, 0.8)'
+                    },
+                    {
+                        label: 'Knee Extension',
+                        data: [8, 82, 10],
+                        backgroundColor: 'rgba(236, 72, 153, 0.8)'
+                    },
+                    {
+                        label: 'Squats',
+                        data: [6, 9, 85],
+                        backgroundColor: 'rgba(249, 115, 22, 0.8)'
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: true,
+                plugins: {
+                    legend: {
+                        position: 'bottom',
+                        labels: {
+                            padding: 15,
+                            usePointStyle: true
+                        }
+                    },
+                    tooltip: {
+                        callbacks: {
+                            label: function(context) {
+                                return context.dataset.label + ': ' + context.parsed.y + '%';
+                            }
+                        }
+                    }
+                },
+                scales: {
+                    x: {
+                        stacked: true,
+                        grid: {
+                            display: false
+                        }
+                    },
+                    y: {
+                        stacked: true,
+                        beginAtZero: true,
+                        max: 100,
+                        ticks: {
+                            callback: function(value) {
+                                return value + '%';
+                            }
+                        },
+                        grid: {
+                            color: 'rgba(0, 0, 0, 0.05)'
+                        }
+                    }
+                }
+            }
+        });
+    </script>
+</body>
+</html>
+

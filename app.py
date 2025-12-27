@@ -12,6 +12,7 @@ import mediapipe as mp
 from werkzeug.utils import secure_filename
 import uuid
 from datetime import datetime
+import database
 
 app = Flask(__name__)
 
@@ -378,11 +379,13 @@ def process_video(video_path):
     cap.release()
     out.release()
     
-    # Calculate detailed statistics
+    # Calculate detailed statistics with per-posture correct/incorrect counts
     summary = {
         'total_frames': frame_count,
         'detections': len(detections),
         'posture_counts': {},
+        'posture_correct_counts': {},
+        'posture_incorrect_counts': {},
         'correct_count': sum(1 for d in detections if d['correct']),
         'incorrect_count': sum(1 for d in detections if not d['correct']),
         'avg_confidence': float(np.mean([d['confidence'] for d in detections])) if detections else 0.0
@@ -391,6 +394,43 @@ def process_video(video_path):
     for det in detections:
         posture = det['posture']
         summary['posture_counts'][posture] = summary['posture_counts'].get(posture, 0) + 1
+        if det['correct']:
+            summary['posture_correct_counts'][posture] = summary['posture_correct_counts'].get(posture, 0) + 1
+        else:
+            summary['posture_incorrect_counts'][posture] = summary['posture_incorrect_counts'].get(posture, 0) + 1
+    
+    # Get recommendations for incorrect postures
+    incorrect_postures = []
+    for posture in summary['posture_counts'].keys():
+        correct_count = summary['posture_correct_counts'].get(posture, 0)
+        incorrect_count = summary['posture_incorrect_counts'].get(posture, 0)
+        
+        # Determine if posture is incorrect based on type
+        if posture == 'Knee_Extension':
+            # For Knee Extension: incorrect > correct means Incorrect
+            if incorrect_count > correct_count:
+                incorrect_postures.append(posture)
+        elif posture == 'Squats':
+            # For Squats: correct > incorrect means Correct, otherwise Incorrect
+            if correct_count <= incorrect_count:
+                incorrect_postures.append(posture)
+        elif posture == 'Arm_Raise':
+            # For Arm Raise: correct > incorrect means Correct, otherwise Incorrect
+            if correct_count <= incorrect_count:
+                incorrect_postures.append(posture)
+        else:
+            # Default: if incorrect >= correct, it's incorrect
+            if incorrect_count >= correct_count:
+                incorrect_postures.append(posture)
+    
+    # Get video recommendations
+    video_recommendations = database.get_video_recommendations(incorrect_postures) if incorrect_postures else []
+    
+    # Get random music recommendation
+    music_recommendation = database.get_random_music_recommendation()
+    
+    summary['video_recommendations'] = video_recommendations
+    summary['music_recommendation'] = music_recommendation
     
     return result_filename, summary
 
@@ -399,6 +439,24 @@ def process_video(video_path):
 def index():
     """Main page"""
     return render_template('index.html', classes=class_names)
+
+
+@app.route('/upload')
+def upload():
+    """Upload page"""
+    return render_template('upload.html')
+
+
+@app.route('/about')
+def about():
+    """About page"""
+    return render_template('about.html')
+
+
+@app.route('/model-accuracy')
+def model_accuracy():
+    """Model accuracy visualization page"""
+    return render_template('model_accuracy.html')
 
 
 @app.route('/predict', methods=['POST'])
@@ -473,6 +531,13 @@ if __name__ == '__main__':
     print("=" * 60)
     print("ZUMBA AI - Posture Classification Web App")
     print("=" * 60)
+    
+    # Initialize database
+    try:
+        database.init_database()
+    except Exception as e:
+        print(f"WARNING: Database initialization failed: {e}")
+        print("Continuing without database...")
     
     # Load model
     try:
